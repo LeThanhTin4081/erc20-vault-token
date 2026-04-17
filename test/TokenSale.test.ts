@@ -1,6 +1,5 @@
-import { expect } from "chai";
-import { ethers } from "hardhat";
+import { describe } from "node:test";
 
-describe("TokenSale", function () {
+describe("TokenSale - Khung test", function () {
   // Test code cho TV3
 });

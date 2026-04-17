@@ -1,4 +1,5 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import hardhatEthersPlugin from "@nomicfoundation/hardhat-ethers";
 import { configVariable, defineConfig } from "hardhat/config";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -41,7 +42,7 @@ function napBienMoiTruongTuFileEnv() {
 napBienMoiTruongTuFileEnv();
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatToolboxViemPlugin, hardhatEthersPlugin],
   solidity: {
     profiles: {
       default: {
@@ -63,21 +64,11 @@ export default defineConfig({
       type: "edr-simulated",
       chainType: "l1",
     },
-    hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
-    },
     sepolia: {
       type: "http",
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-    },
-    opSepolia: {
-      type: "http",
-      chainType: "op",
-      url: configVariable("OP_SEPOLIA_RPC_URL"),
-      accounts: [configVariable("OP_SEPOLIA_PRIVATE_KEY")],
     },
   },
 });

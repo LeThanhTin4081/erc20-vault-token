@@ -1,129 +1,62 @@
-# TỔNG HỢP CÁC LỆNH HARDHAT VÀ KIẾN THỨC TERMINAL TRONG SOLIDITY
+﻿# VaultToken Hardhat Workspace
 
-Dưới đây là cẩm nang tổng hợp các lệnh Hardhat từ cơ bản đến nâng cao, dùng khi code Smart Contract bằng Solidity. Mọi thao tác này đều chạy trên Terminal (Command Prompt / PowerShell / VS Code Terminal).
+This repository is a shared Hardhat 3 project for building and testing `VaultToken` and related contracts.
 
----
+## 1) Quick start
 
-## ⚠️ 1. LÀM GÌ KHI VỪA CẬP NHẬT CODE TỪ GIT VỀ? (QUAN TRỌNG NHẤT DÀNH CHO TEAM)
-
-Mỗi khi thành viên khác push code, bạn lấy code mới nhất về máy (bằng cách clone hoặc `git pull`), **ĐỪNG VỘI VÀNG BIÊN DỊCH HAY CHẠY TEST**. Tác vụ đầu tiên bắt buộc phải làm là cài đặt hoặc đồng bộ các gói bổ trợ mà nhóm đã thêm vào.
-
-**Chạy lệnh này ngay lập tức:**
-```cmd
+```bash
 npm install
+npm run compile
+npm test
 ```
 
-> ❓ **Lỡ máy thành viên khác chưa cài Hardhat hay thư viện OpenZeppelin thì sao?**
-> 👉 **Trả lời:** KHÔNG CẦN CÀI LẠI! Lệnh `npm install` ở trên sẽ tự động lục tìm file `package.json` do trưởng nhóm đã làm sẵn và tải **đầy đủ 100%** mọi cấu hình từ Hardhat, OpenZeppelin... về máy cho các bạn. Các thành viên trong nhóm tuyệt đối **KHÔNG tự ý gõ lại** lệnh khởi tạo Hardhat nữa để tránh gây xung đột dự án.
+## 2) Environment file
 
----
+This team keeps `.env` shared in the repo.
 
-## 🏗️ 2. KHỞI TẠO VÀ CÀI ĐẶT
+Required variables:
 
-### Khởi tạo project mới (Chỉ dành cho dự án trống)
-```cmd
-npm init -y
-npm install --save-dev hardhat
-npx hardhat init
-```
-*(Nếu làm theo team, TV1 đã thực hiện lệnh này, các TV khác KHÔNG chạy lại).*
-
-### Cài đặt thư viện chuẩn OpenZeppelin (ERC20, ERC721, ...):
-```cmd
-npm install @openzeppelin/contracts
+```env
+SEPOLIA_RPC_URL=...
+SEPOLIA_PRIVATE_KEY=0x...
+ETHERSCAN_API_KEY=...
 ```
 
----
+Optional variables for interaction scripts:
 
-## 🛠️ 2. BIÊN DỊCH VÀ KIỂM TRA LỖI (COMPILE)
-
-### Biên dịch toàn bộ Smart Contracts:
-```cmd
-npx hardhat compile
-```
-Lệnh này sẽ biến đổi code `.sol` thành `artifacts/` (chứa ABI) và `cache/`.
-
-### Xóa bộ nhớ đệm và biên dịch lại từ đầu:
-Nếu dự án gặp lỗi ảo không rõ nguyên nhân, hãy làm sạch dự án:
-```cmd
-npx hardhat clean
-npx hardhat compile
+```env
+VAULT_TOKEN_ADDRESS=0x...
+TRANSFER_TO=0x...
+TRANSFER_AMOUNT=1
 ```
 
----
+You can copy from `.env.example` as a template.
 
-## 🧪 3. CHẠY KỊCH BẢN KIỂM THỬ (TEST)
+## 3) Available scripts
 
-### Chạy tất cả các unit test trong folder `test/`:
-```cmd
-npx hardhat test
-```
+- `npm run clean` -> clean Hardhat cache/artifacts
+- `npm run compile` -> compile contracts
+- `npm test` -> run all tests
+- `npm run node` -> start local Hardhat node
+- `npm run deploy:local` -> deploy `VaultToken` to local simulated network (`hardhatMainnet`)
+- `npm run deploy:sepolia` -> deploy `VaultToken` to Sepolia
+- `npm run check:sepolia` -> print signer address + Sepolia ETH balance from current env key
 
-### Chạy một file test cụ thể:
-```cmd
+## 4) Useful manual commands
+
+```bash
 npx hardhat test test/VaultToken.test.ts
+npx hardhat run scripts/interact-read.ts --network sepolia --no-compile
+npx hardhat run scripts/interact-write.ts --network sepolia --no-compile
 ```
 
-### Chạy test và tạo báo cáo Gas (Gas Reporter):
-Lưu ý phải bật config `gasReporter` trong `hardhat.config.ts`.
-```cmd
-REPORT_GAS=true npx hardhat test
-```
+## 5) Team workflow
 
----
+1. Pull latest code.
+2. Run `npm install`.
+3. Run `npm run compile` and `npm test`.
+4. Build features in your assigned files.
 
-## 🚀 4. DEPLOY (TRIỂN KHAI LÊN BLOCKCHAIN)
+## 6) Security note
 
-### Khởi chạy một Blockchain nội bộ cục bộ (Local Node):
-```cmd
-npx hardhat node
-```
-*(Mở tab terminal mới để chạy lệnh deploy dưới đây, giữ nguyên tab này).*
-
-### Deploy bằng Scripts lên mạng Local (Hardhat Node/Ganache):
-```cmd
-npx hardhat run scripts/deploy.ts --network localhost
-```
-
-### Deploy lên mạng Testnet thực tế (vd: Sepolia):
-Yêu cầu đã cấu hình URL RPC (Alchemy/Infura) và `PRIVATE_KEY` trong file `.env` & `hardhat.config.ts`.
-```cmd
-npx hardhat run scripts/deploy.ts --network sepolia
-```
-
----
-
-## 🔐 5. XÁC THỰC MÃ NGUỒN (VERIFY CONTRACT) TRÊN ETHERSCAN
-
-Để chứng minh hợp đồng của bạn trong sạch trên Block Explorer (ví dụ: Sepolia Etherscan), bạn cần Verify mã nguồn:
-
-*(Cập nhật khóa API Etherscan vào file `.env` trước).*
-
-### Verify Contract:
-```cmd
-npx hardhat verify --network sepolia <ĐỊA_CHỈ_CONTRACT_SAU_KHI_DEPLOY> "tham_số_constructor_1" "tham_số_constructor_2"
-```
-
----
-
-## ⚙️ 6. CÁC LỆNH TIỆN ÍCH KHÁC
-
-### Mở Hardhat Console (Tương tác trực tiếp với Contract):
-```cmd
-npx hardhat console --network localhost
-```
-Trong console, bạn có thể chạy code javascript với thư viện ethers để truy vấn contract.
-
-### In ra danh sách tất cả các tài khoản mặc định của Hardhat:
-Tùy thuộc vào code trong file `hardhat.config.ts`, bạn có thể kiểm tra danh sách accounts:
-```cmd
-npx hardhat accounts
-```
-
----
-
-## 💡 MẸO QUAN TRỌNG KHI LÀM VIỆC THEO TEAM
-- Mỗi khi ai đó push code mới lên GitHub, khi clone hoặc pull về, hãy luôn chạy `npm install` để cài đặt đủ Package trước khi compile.
-- KHÔNG bao giờ commit file `.env` lên GitHub (hãy chắc chắn `.env` nằm trong `.gitignore`).
-- Khi gặp lỗi lạ, combo chữa cháy luôn là:
-  `npx hardhat clean` -> `npx hardhat compile`.
+Even for testnet: never reuse this private key on mainnet or real-value wallets.
