@@ -60,13 +60,17 @@
 ┌──────────────────────────────────────────────────────┐
 │         PHÂN BỔ 1,000,000 VLT BAN ĐẦU               │
 │                                                      │
-│  ████████████████████  40%  =  400,000 VLT           │
+│  ████████████████      30%  =  300,000 VLT           │
 │  │ Quỹ phát triển (Team)                             │
 │  │ → Khóa 6 tháng (180 ngày), sau đó mới rút được   │
 │                                                      │
-│  ██████████████████    30%  =  300,000 VLT           │
+│  ████████████          20%  =  200,000 VLT           │
 │  │ Bán công khai (Public Sale)                       │
 │  │ → Nạp vào TokenSale contract, ai cũng mua được   │
+│                                                      │
+│  ████████████          20%  =  200,000 VLT           │
+│  │ Quỹ gọi vốn (Seed / Series A)                     │
+│  │ → Phân bổ cho nhà đầu tư chiến lược               │
 │                                                      │
 │  ████████████          20%  =  200,000 VLT           │
 │  │ Cộng đồng (Community / Airdrop)                   │
@@ -81,8 +85,9 @@
 
 | Phần | % | Số lượng | Khóa | Mục đích |
 |------|---|----------|------|----------|
-| 🏗️ Team/Dev | 40% | 400,000 VLT | Khóa 180 ngày | Trả thưởng cho team phát triển |
-| 🛒 Public Sale | 30% | 300,000 VLT | Không khóa | Bán cho công chúng qua TokenSale |
+| 🏗️ Team/Dev | 30% | 300,000 VLT | Khóa 180 ngày | Trả thưởng cho team phát triển |
+| 🛒 Public Sale | 20% | 200,000 VLT | Không khóa | Bán cho công chúng qua TokenSale |
+| 💼 Quỹ gọi vốn (Seed/Series A) | 20% | 200,000 VLT | Theo thỏa thuận | Bán cho quỹ/nhà đầu tư chiến lược |
 | 🎁 Community | 20% | 200,000 VLT | Không khóa | Airdrop, thưởng người dùng |
 | 🏦 Reserve | 10% | 100,000 VLT | Không khóa | Admin giữ dự phòng |
 
@@ -97,17 +102,17 @@
 
 | Quỹ | Số lượng | Thời gian khóa | Cách mở |
 |-----|----------|-----------------|---------|
-| Team/Dev | 400,000 VLT | 180 ngày (6 tháng) | Gọi `release()` sau 180 ngày |
+| Team/Dev | 300,000 VLT | 180 ngày (6 tháng) | Gọi `release()` sau 180 ngày |
 | Ví dụ demo | Tùy chọn | 60 giây (để test nhanh) | Gọi `release()` sau 60s |
 
 **Flow khóa token:**
 
 ```
 1. Admin deploy VaultToken → nhận 1,000,000 VLT
-2. Admin approve 400,000 VLT cho TokenTimelock contract
-3. Admin gọi lock(400000, 180 ngày) → token bị khóa
+2. Admin approve 300,000 VLT cho TokenTimelock contract
+3. Admin gọi lock(300000, 180 ngày) → token bị khóa
 4. Trước 180 ngày → gọi release() → ❌ REVERT
-5. Sau 180 ngày → gọi release() → ✅ nhận lại 400,000 VLT
+5. Sau 180 ngày → gọi release() → ✅ nhận lại 300,000 VLT
 ```
 
 ### 5. Cơ chế bán Token (Token Sale)
