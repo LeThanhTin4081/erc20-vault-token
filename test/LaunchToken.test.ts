@@ -1,5 +1,6 @@
+import { describe, it } from "node:test";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 
 describe("LaunchToken", function () {
   it("Should deploy successfully", async function () {
