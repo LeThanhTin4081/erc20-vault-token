@@ -1,28 +1,66 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+interface IAirdropPoints {
+    function getPoints(address user, uint256 snapshotId) external view returns (uint256);
+}
+
+interface ITreasury {
+    function token() external view returns (IERC20);
+}
+
 /**
  * @title AirdropDistributor
  * @dev Nơi người dùng thực hiện nhận tiền Airdrop.
  * Khớp điểm của AirdropPoints, và rút tiền từ quỹ allowance của Treasury.
  */
-contract AirdropDistributor {
+contract AirdropDistributor is ReentrancyGuard {
     
+    IAirdropPoints public airdropPoints;
+    ITreasury public treasury;
+
+    // Tỷ lệ quy đổi điểm ra token: 1 point = 1 wei/token
+    // Có thể cấu hình thêm biến này nếu cần, mặc định cho 1:1 theo ether
+    uint256 public rewardPerPoint = 1e18; // 1 điểm = 1 token (giả sử 18 decimals)
+
     // Đánh dấu người dùng đã nhận phần thưởng theo từng đợt
+    // snapshotId => (user => claimed status)
     mapping(uint256 => mapping(address => bool)) public claimed;
 
-    constructor() {
-        // Liên kết AirdropPoints và Treasury
+    event Claimed(address indexed user, uint256 snapshotId, uint256 amount);
+
+    constructor(address _airdropPoints, address _treasury) {
+        require(_airdropPoints != address(0), "Invalid AirdropPoints address");
+        require(_treasury != address(0), "Invalid Treasury address");
+        airdropPoints = IAirdropPoints(_airdropPoints);
+        treasury = ITreasury(_treasury);
     }
 
     /**
      * @dev User gọi để claim Airdrop
      */
-    function claim(uint256 snapshotId) external {
+    function claim(uint256 snapshotId) external nonReentrant {
         // 1. Kiểm tra claimed[snapshotId][msg.sender] == false
+        require(!claimed[snapshotId][msg.sender], "AirdropDistributor: already claimed");
+
         // 2. Tính toán tiền theo điểm từ AirdropPoints (getPoints)
+        uint256 amount = calculateReward(msg.sender, snapshotId);
+        require(amount > 0, "AirdropDistributor: zero reward");
+
         // 3. Mark claimed = true
+        claimed[snapshotId][msg.sender] = true;
+
         // 4. transferFrom quỹ của Treasury -> User
+        IERC20 token = treasury.token();
+        require(
+            token.transferFrom(address(treasury), msg.sender, amount),
+            "AirdropDistributor: transfer failed"
+        );
+
+        emit Claimed(msg.sender, snapshotId, amount);
     }
 
     /**
@@ -30,6 +68,41 @@ contract AirdropDistributor {
      */
     function calculateReward(address user, uint256 snapshotId) public view returns (uint256) {
         // Công thức quy đổi Point -> Token
-        return 0;
+        uint256 points = airdropPoints.getPoints(user, snapshotId);
+        return points * rewardPerPoint;
+    }
+}
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MockDistributorToken is ERC20 {
+    constructor() ERC20("Mock Token", "MTK") {}
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
+}
+
+contract MockAirdropPoints {
+    mapping(address => mapping(uint256 => uint256)) public points;
+
+    function setPoints(address user, uint256 snapshotId, uint256 amount) external {
+        points[user][snapshotId] = amount;
+    }
+
+    function getPoints(address user, uint256 snapshotId) external view returns (uint256) {
+        return points[user][snapshotId];
+    }
+}
+
+contract MockTreasury {
+    IERC20 public token;
+
+    constructor(address _token) {
+        token = IERC20(_token);
+    }
+
+    function approveSpender(address spender, uint256 amount) external {
+        token.approve(spender, amount);
     }
 }
