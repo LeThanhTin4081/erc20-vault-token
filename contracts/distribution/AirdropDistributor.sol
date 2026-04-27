@@ -24,9 +24,11 @@ contract AirdropDistributor is ReentrancyGuard {
     IAirdropPoints public airdropPoints;
     ITreasury public treasury;
 
-    // Tỷ lệ quy đổi điểm ra token: 1 point = 1 wei/token
-    // Có thể cấu hình thêm biến này nếu cần, mặc định cho 1:1 theo ether
-    uint256 public rewardPerPoint = 1e18; // 1 điểm = 1 token (giả sử 18 decimals)
+    // Tỷ lệ quy đổi điểm ra token.
+    // AirdropPoints đang lưu điểm theo đơn vị 18 decimals từ StakingVault,
+    // nên 1 điểm raw đổi ra 1 token raw. Nếu nhân thêm 1e18 ở đây,
+    // reward sẽ bị phóng đại 1e18 lần.
+    uint256 public rewardPerPoint = 1;
 
     // Đánh dấu người dùng đã nhận phần thưởng theo từng đợt
     // snapshotId => (user => claimed status)

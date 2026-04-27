@@ -72,8 +72,8 @@ describe("AirdropDistributor", function () {
     // Mở trading để cho phép giao dịch
     await token.openTrading();
 
-    // Admin nạp 100,000 VLT vào Treasury
-    const depositAmount = ethers.parseEther("100000");
+    // Admin nạp 200,000 VLT vào Treasury đúng phần Community/Airdrop trong tokenomics
+    const depositAmount = ethers.parseEther("200000");
     await token.approve(await treasury.getAddress(), depositAmount);
     await treasury.deposit(depositAmount);
 
@@ -84,9 +84,9 @@ describe("AirdropDistributor", function () {
   it("1. calculateReward - trả về đúng số token dựa trên point", async function () {
     // Cấp VAULT_ROLE và cộng điểm cho user1 qua flow thật
     await accessManager.grantRole(VAULT_ROLE, admin.address);
-    await airdropPoints.addPoints(user1.address, 5);
+    await airdropPoints.addPoints(user1.address, ethers.parseEther("5"));
 
-    // 1 điểm = 1e18 token (rewardPerPoint)
+    // Điểm được lưu theo 18 decimals, 5 điểm hiển thị = 5e18 raw points.
     const expectedReward = ethers.parseEther("5");
     const snapshotId = await airdropPoints.currentSnapshotId();
     const reward = await distributor.calculateReward(user1.address, snapshotId);
@@ -97,7 +97,7 @@ describe("AirdropDistributor", function () {
   it("2. claim - user claim token thành công", async function () {
     // Setup: cộng điểm cho user1 ở đợt 0
     await accessManager.grantRole(VAULT_ROLE, admin.address);
-    await airdropPoints.addPoints(user1.address, 5);
+    await airdropPoints.addPoints(user1.address, ethers.parseEther("5"));
     const snapshotId = await airdropPoints.currentSnapshotId();
 
     const expectedReward = ethers.parseEther("5");
@@ -118,7 +118,7 @@ describe("AirdropDistributor", function () {
 
   it("3. claim - ngăn chặn Double Claim", async function () {
     await accessManager.grantRole(VAULT_ROLE, admin.address);
-    await airdropPoints.addPoints(user1.address, 5);
+    await airdropPoints.addPoints(user1.address, ethers.parseEther("5"));
     const snapshotId = await airdropPoints.currentSnapshotId();
 
     // Lần claim đầu tiên sẽ thành công
@@ -145,14 +145,14 @@ describe("AirdropDistributor", function () {
     await accessManager.grantRole(VAULT_ROLE, admin.address);
 
     // Đợt snapshot 0: cộng 3 điểm cho user1
-    await airdropPoints.addPoints(user1.address, 3);
+    await airdropPoints.addPoints(user1.address, ethers.parseEther("3"));
     const snapshot0 = await airdropPoints.currentSnapshotId();
 
     // Chốt sổ → chuyển sang đợt 1
     await airdropPoints.snapshot();
 
     // Đợt snapshot 1: cộng 4 điểm cho user1
-    await airdropPoints.addPoints(user1.address, 4);
+    await airdropPoints.addPoints(user1.address, ethers.parseEther("4"));
     const snapshot1 = await airdropPoints.currentSnapshotId();
 
     // Claim đợt 0
@@ -172,7 +172,7 @@ describe("AirdropDistributor", function () {
     await accessManager.grantRole(VAULT_ROLE, admin.address);
 
     // Cộng số điểm CỰC LỚN (nhiều hơn số token trong Treasury)
-    await airdropPoints.addPoints(user1.address, 999999);
+    await airdropPoints.addPoints(user1.address, ethers.parseEther("999999"));
     const snapshotId = await airdropPoints.currentSnapshotId();
 
     // Claim sẽ thất bại vì Treasury không đủ allowance/balance
