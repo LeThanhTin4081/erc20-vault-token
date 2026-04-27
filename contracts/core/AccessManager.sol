@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  */
 contract AccessManager is AccessControl {
 
-    // ========== ROLE CONSTANTS ==========
+    // ROLE CONSTANTS
     // Các định danh vai trò được mã hóa băm (keccak256) để tối ưu không gian lưu trữ EVM
 
     // Quyền tối cao: Có thể cấp/thu hồi quyền của người khác, rút tiền Treasury.
@@ -28,7 +28,7 @@ contract AccessManager is AccessControl {
     // Quyền Vault: Dành riêng cho hợp đồng StakingVault (để gọi hàm nhạy cảm nếu cần).
     bytes32 public constant VAULT_ROLE = keccak256("VAULT_ROLE");
 
-    // ========== CONSTRUCTOR ==========
+    // CONSTRUCTOR
 
     /**
      * @dev Khởi tạo AccessManager.
@@ -44,7 +44,7 @@ contract AccessManager is AccessControl {
         _grantRole(ADMIN_ROLE, msg.sender);
     }
 
-    // ========== FUNCTIONS ==========
+    // FUNCTIONS
     // Lưu ý: Các hàm grantRole, revokeRole, hasRole đã được viết sẵn và tối ưu 
     // trong AccessControl.sol của OpenZeppelin, chúng ta không cần viết lại.
     // 

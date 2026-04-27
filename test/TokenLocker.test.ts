@@ -17,7 +17,7 @@ describe("TokenLocker", function () {
   let user1: any;         // Ví user thường để test lock/unlock
   let ethers: any;        // Thư viện ethers để tương tác blockchain
 
-  // ========== HELPER: Kiểm tra revert ==========
+  // HELPER: Kiểm tra revert
   // Hàm phụ trợ dùng để bắt lỗi revert (thay thế cho .revertedWith)
   // Lý do: Hardhat 3 + Viem không tích hợp sẵn hardhat-chai-matchers
   async function expectRevert(promise: Promise<any>, expectedError: string) {
@@ -30,7 +30,7 @@ describe("TokenLocker", function () {
     }
   }
 
-  // ========== SETUP ==========
+  // SETUP
   // beforeEach: Chạy đoạn code này TRƯỚC MỖI test case (it)
   // Đảm bảo mỗi test chạy trên một môi trường mới tinh, không bị ảnh hưởng bởi test trước
   beforeEach(async function () {
@@ -60,7 +60,7 @@ describe("TokenLocker", function () {
     await token.transfer(user1.address, ethers.parseEther("10000"));
   });
 
-  // ========== TEST CASE: THEO ĐÚNG 12 TRƯỜNG HỢP TRONG FILE KẾ HOẠCH ==========
+  // TEST CASE: THEO ĐÚNG 12 TRƯỜNG HỢP TRONG FILE KẾ HOẠCH
 
   describe("Deploy", function () {
     // Test Case 1: Kiểm tra xem constructor có lưu đúng địa chỉ reference không
