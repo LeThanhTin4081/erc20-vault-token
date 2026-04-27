@@ -23,7 +23,7 @@ interface ILaunchToken {
 
 contract TokenLocker {
 
-    // ========== STATE VARIABLES ==========
+    // STATE VARIABLES
 
     // Địa chỉ token ERC-20 (LaunchToken)
     IERC20 public token;
@@ -42,7 +42,7 @@ contract TokenLocker {
     // Ví dụ: userLocks[0xABC] = [LockInfo1, LockInfo2, ...]
     mapping(address => LockInfo[]) public userLocks;
 
-    // ========== EVENTS ==========
+    // EVENTS
     // Event phát ra khi user khóa token thành công
     // indexed = cho phép lọc/tìm kiếm theo trường đó trên blockchain
     event Locked(
@@ -59,7 +59,7 @@ contract TokenLocker {
         uint256 amount              // Số token đã nhận lại
     );
 
-    // ========== MODIFIER ==========
+    // MODIFIER
     // Chặn hành động nếu hệ thống chưa launch (tradingOpen == false)
     // Đọc trạng thái từ LaunchToken thông qua interface ILaunchToken
     modifier onlyAfterLaunch() {
@@ -70,7 +70,7 @@ contract TokenLocker {
         _; // Dấu này nghĩa là: "nếu require pass thì chạy tiếp hàm bên dưới"
     }
 
-    // ========== CONSTRUCTOR ==========
+    // CONSTRUCTOR
 
     /**
      * @dev Khởi tạo contract, lưu địa chỉ token và accessManager
@@ -82,7 +82,7 @@ contract TokenLocker {
         accessManager = IAccessManager(_accessManager);
     }
 
-    // ========== FUNCTIONS ==========
+    // FUNCTIONS
 
     /**
      * @dev Khóa token trong khoảng thời gian nhất định
@@ -150,7 +150,7 @@ contract TokenLocker {
         // block.timestamp = thời gian hiện tại trên blockchain (đơn vị: giây)
         require(block.timestamp >= lockInfo.unlockTime, "TokenLocker: not yet unlocked");
 
-        // === QUAN TRỌNG: Đánh dấu đã rút TRƯỚC khi chuyển token ===
+        // QUAN TRỌNG: Đánh dấu đã rút TRƯỚC khi chuyển token
         // Đây là pattern "Checks-Effects-Interactions" để chống reentrancy attack
         // Nếu chuyển token trước rồi mới đánh dấu → hacker có thể gọi lại unlock()
         // trong lúc chuyển token chưa xong → rút nhiều lần
@@ -163,7 +163,7 @@ contract TokenLocker {
         emit Unlocked(msg.sender, lockId, lockInfo.amount);
     }
 
-    // ========== VIEW FUNCTIONS ==========
+    // VIEW FUNCTIONS
     // Hàm view = chỉ đọc dữ liệu, KHÔNG tốn gas khi gọi từ bên ngoài
     // (chỉ tốn gas nếu được gọi từ trong 1 transaction khác)
 

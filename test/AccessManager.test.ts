@@ -19,7 +19,7 @@ describe("AccessManager", function () {
   let MINTER_ROLE: string;
   let VAULT_ROLE: string;
 
-  // ========== HELPER: Kiểm tra revert ==========
+  // HELPER: Kiểm tra revert
   async function expectRevert(promise: Promise<any>, expectedError: string) {
     try {
       await promise;
@@ -29,7 +29,7 @@ describe("AccessManager", function () {
     }
   }
 
-  // ========== SETUP ==========
+  // SETUP
   beforeEach(async function () {
     const connection = await hre.network.connect();
     ethers = connection.ethers;
@@ -47,7 +47,7 @@ describe("AccessManager", function () {
     VAULT_ROLE = ethers.keccak256(ethers.toUtf8Bytes("VAULT_ROLE"));
   });
 
-  // ========== TEST CASE ==========
+  // TEST CASE
 
   describe("Khởi tạo (Deployment)", function () {
     it("1. Người deploy phải có quyền DEFAULT_ADMIN_ROLE", async function () {

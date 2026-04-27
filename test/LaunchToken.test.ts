@@ -18,7 +18,7 @@ describe("LaunchToken", function () {
   let ADMIN_ROLE: string;
   let MINTER_ROLE: string;
 
-  // ========== HELPER: Kiểm tra revert ==========
+  // HELPER: Kiểm tra revert
   async function expectRevert(promise: Promise<any>, expectedError: string) {
     try {
       await promise;
@@ -28,7 +28,7 @@ describe("LaunchToken", function () {
     }
   }
 
-  // ========== SETUP ==========
+  // SETUP
   beforeEach(async function () {
     const connection = await hre.network.connect();
     ethers = connection.ethers;
@@ -51,7 +51,7 @@ describe("LaunchToken", function () {
     token = await TokenFactory.deploy(await accessManager.getAddress());
   });
 
-  // ========== TEST CASE ==========
+  // TEST CASE
 
   describe("Khởi tạo (Deployment)", function () {
     it("1. Phải có tổng cung ban đầu là 1,000,000 VLT", async function () {

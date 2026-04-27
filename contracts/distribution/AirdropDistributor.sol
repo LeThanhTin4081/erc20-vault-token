@@ -19,6 +19,8 @@ interface ITreasury {
  */
 contract AirdropDistributor is ReentrancyGuard {
     
+    // STATE VARIABLES
+
     IAirdropPoints public airdropPoints;
     ITreasury public treasury;
 
@@ -30,7 +32,11 @@ contract AirdropDistributor is ReentrancyGuard {
     // snapshotId => (user => claimed status)
     mapping(uint256 => mapping(address => bool)) public claimed;
 
+    // EVENTS
+
     event Claimed(address indexed user, uint256 snapshotId, uint256 amount);
+
+    // CONSTRUCTOR
 
     constructor(address _airdropPoints, address _treasury) {
         require(_airdropPoints != address(0), "Invalid AirdropPoints address");
@@ -38,6 +44,8 @@ contract AirdropDistributor is ReentrancyGuard {
         airdropPoints = IAirdropPoints(_airdropPoints);
         treasury = ITreasury(_treasury);
     }
+
+    // CORE FUNCTIONS
 
     /**
      * @dev User gọi để claim Airdrop
@@ -63,6 +71,8 @@ contract AirdropDistributor is ReentrancyGuard {
         emit Claimed(msg.sender, snapshotId, amount);
     }
 
+    // VIEW FUNCTIONS
+
     /**
      * @dev Hàm xem trước số tiền User sẽ nhận được nếu claim
      */
@@ -70,39 +80,5 @@ contract AirdropDistributor is ReentrancyGuard {
         // Công thức quy đổi Point -> Token
         uint256 points = airdropPoints.getPoints(user, snapshotId);
         return points * rewardPerPoint;
-    }
-}
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract MockDistributorToken is ERC20 {
-    constructor() ERC20("Mock Token", "MTK") {}
-
-    function mint(address to, uint256 amount) external {
-        _mint(to, amount);
-    }
-}
-
-contract MockAirdropPoints {
-    mapping(address => mapping(uint256 => uint256)) public points;
-
-    function setPoints(address user, uint256 snapshotId, uint256 amount) external {
-        points[user][snapshotId] = amount;
-    }
-
-    function getPoints(address user, uint256 snapshotId) external view returns (uint256) {
-        return points[user][snapshotId];
-    }
-}
-
-contract MockTreasury {
-    IERC20 public token;
-
-    constructor(address _token) {
-        token = IERC20(_token);
-    }
-
-    function approveSpender(address spender, uint256 amount) external {
-        token.approve(spender, amount);
     }
 }

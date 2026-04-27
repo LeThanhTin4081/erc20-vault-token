@@ -1,8 +1,6 @@
 import { expect } from "chai";
-import { ethers } from "ethers";
 import { describe, it, beforeEach } from "node:test";
-import fs from "fs";
-import path from "path";
+import hre from "hardhat";
 
 /**
  * @markdown
@@ -11,34 +9,49 @@ import path from "path";
  * Sử dụng thư viện `chai` (expect) để kiểm tra các điều kiện.
  */
 describe("Hợp đồng AirdropPoints", function () {
+  let accessManager: any;
   let airdropPoints: any;
-  let owner: ethers.Signer;
-  let vaultMock: ethers.Signer;
-  let user: ethers.Signer;
-  
-  // Dùng ethers để băm chuỗi "VAULT_ROLE" thay vì ghi cứng mã hash
-  const VAULT_ROLE = ethers.keccak256(ethers.toUtf8Bytes("VAULT_ROLE"));
+  let owner: any;
+  let vaultMock: any;
+  let user: any;
+  let ethers: any;
+
+  let VAULT_ROLE: any;
+  let ADMIN_ROLE: any;
+
+  // HELPER: Kiểm tra revert
+  async function expectRevert(promise: Promise<any>, expectedError: string) {
+    try {
+      await promise;
+      expect.fail(`Expected transaction to revert with: ${expectedError}`);
+    } catch (error: any) {
+      expect(error.message).to.include(expectedError);
+    }
+  }
 
   beforeEach(async function () {
-    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
-    const signers = await provider.listAccounts();
-    owner = await provider.getSigner(signers[0].address);
-    vaultMock = await provider.getSigner(signers[1].address);
-    user = await provider.getSigner(signers[2].address);
+    const connection = await hre.network.connect();
+    ethers = connection.ethers;
+    
+    [owner, vaultMock, user] = await ethers.getSigners();
 
-    const airdropPointsArtifactPath = path.resolve(process.cwd(), "artifacts/contracts/features/AirdropPoints.sol/AirdropPoints.json");
-    const airdropPointsArtifact = JSON.parse(fs.readFileSync(airdropPointsArtifactPath, "utf-8"));
+    // Deploy AccessManager (owner sẽ có ADMIN_ROLE)
+    const AccessManagerFactory = await ethers.getContractFactory("AccessManager");
+    accessManager = await AccessManagerFactory.deploy();
 
-    const AirdropPointsFactory = new ethers.ContractFactory(airdropPointsArtifact.abi, airdropPointsArtifact.bytecode, owner);
-    airdropPoints = await AirdropPointsFactory.deploy();
-    await airdropPoints.waitForDeployment();
+    // Deploy AirdropPoints (truyền AccessManager vào constructor)
+    const AirdropPointsFactory = await ethers.getContractFactory("AirdropPoints");
+    airdropPoints = await AirdropPointsFactory.deploy(await accessManager.getAddress());
+    
+    // Lấy các role hash
+    VAULT_ROLE = await airdropPoints.VAULT_ROLE();
+    ADMIN_ROLE = await airdropPoints.ADMIN_ROLE();
   });
 
   // Test Case 1: VAULT_ROLE addPoints thành công
-  it("VAULT_ROLE addPoints thành công và cộng đúng điểm vào mapping", async function () {
-    // Admin (owner) cấp quyền VAULT_ROLE cho tài khoản vaultMock
-    const grantTx = await airdropPoints.grantRole(VAULT_ROLE, vaultMock.address);
-    await grantTx.wait(); // Chờ giao dịch cấp quyền được ghi vào block
+  it("1. VAULT_ROLE addPoints thành công và cộng đúng điểm vào mapping", async function () {
+    // Admin (owner) cấp quyền VAULT_ROLE cho tài khoản vaultMock trên AccessManager
+    await accessManager.grantRole(VAULT_ROLE, vaultMock.address);
     
     const amount = 500n;
     const airdropPointsVault = airdropPoints.connect(vaultMock) as any;
@@ -53,23 +66,36 @@ describe("Hợp đồng AirdropPoints", function () {
   });
 
   // Test Case 2: Không có role → revert
-  it("Không có role sẽ bị revert (từ chối truy cập)", async function () {
+  it("2. Không có role sẽ bị revert (từ chối truy cập)", async function () {
     const amount = 100n;
-    const airdropPointsUser = airdropPoints.connect(user) as any;
     
     // user bình thường gọi hàm addPoints sẽ văng lỗi (Revert)
-    let errorOccurred = false;
-    try {
-      await airdropPointsUser.addPoints(user.address, amount);
-    } catch (e: any) {
-      errorOccurred = true;
-      expect(e.message).to.match(/AccessControlUnauthorizedAccount|unknown custom error|execution reverted/);
-    }
-    expect(errorOccurred).to.be.true;
+    await expectRevert(
+      airdropPoints.connect(user).addPoints(user.address, amount),
+      "AirdropPoints: caller is not vault"
+    );
   });
 
-  // Test Case 3: snapshot tăng ID đúng
-  it("Hàm snapshot tăng currentSnapshotId lên 1 đơn vị chuẩn xác", async function () {
+  // Test Case 3: addPoints với amount = 0 → revert
+  it("3. addPoints với amount = 0 bị revert", async function () {
+    await accessManager.grantRole(VAULT_ROLE, vaultMock.address);
+    
+    await expectRevert(
+      airdropPoints.connect(vaultMock).addPoints(user.address, 0),
+      "Amount must be > 0"
+    );
+  });
+
+  // Test Case 4: Người thường gọi snapshot → revert
+  it("4. Người thường không thể gọi snapshot", async function () {
+    await expectRevert(
+      airdropPoints.connect(user).snapshot(),
+      "AirdropPoints: caller is not admin"
+    );
+  });
+
+  // Test Case 5: snapshot tăng ID đúng
+  it("5. Hàm snapshot tăng currentSnapshotId lên 1 đơn vị chuẩn xác", async function () {
     // Đọc ID ban đầu (lúc mới deploy là 0)
     const initialId = await airdropPoints.currentSnapshotId();
     expect(initialId).to.equal(0n);
@@ -83,11 +109,10 @@ describe("Hợp đồng AirdropPoints", function () {
     expect(newId).to.equal(1n);
   });
 
-  // Test Case 4: snapshot không làm thay đổi dữ liệu cũ (Immutability) & Test Case 5: getPoints trả đúng giá trị
-  it("Hàm snapshot không làm thay đổi dữ liệu cũ và getPoints trả đúng giá trị", async function () {
-    // Cấp quyền VAULT
-    const grantTx = await airdropPoints.grantRole(VAULT_ROLE, vaultMock.address);
-    await grantTx.wait();
+  // Test Case 6: snapshot không làm thay đổi dữ liệu cũ (Immutability) & getPoints trả đúng giá trị
+  it("6. Hàm snapshot không làm thay đổi dữ liệu cũ và getPoints trả đúng giá trị", async function () {
+    // Cấp quyền VAULT trên AccessManager
+    await accessManager.grantRole(VAULT_ROLE, vaultMock.address);
     
     const airdropPointsVault = airdropPoints.connect(vaultMock) as any;
 
@@ -108,5 +133,17 @@ describe("Hợp đồng AirdropPoints", function () {
     // - Tra cứu đợt 1 hiện tại -> Phải là 500
     const pointsEpoch1 = await airdropPoints.getPoints(user.address, 1);
     expect(pointsEpoch1).to.equal(500n);
+  });
+
+  // Test Case 7: getCurrentPoints trả đúng
+  it("7. getCurrentPoints trả đúng điểm đợt hiện tại", async function () {
+    await accessManager.grantRole(VAULT_ROLE, vaultMock.address);
+
+    // Ban đầu chưa cộng điểm → 0
+    expect(await airdropPoints.getCurrentPoints(user.address)).to.equal(0n);
+
+    // Cộng 200 điểm
+    await airdropPoints.connect(vaultMock).addPoints(user.address, 200n);
+    expect(await airdropPoints.getCurrentPoints(user.address)).to.equal(200n);
   });
 });
