@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
   type ButtonHTMLAttributes,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import {
@@ -35,6 +36,7 @@ import {
 } from "@/lib/contracts";
 
 type ViewId = "overview" | "staking" | "airdrop" | "locker" | "admin";
+type AppMode = "home" | "console";
 
 type ReadEntry = {
   status?: string;
@@ -48,6 +50,16 @@ type LockRecord = {
   isReleased: boolean;
 };
 
+type StarPoint = {
+  left: number;
+  top: number;
+  size: number;
+  delay: number;
+  duration: number;
+  dx: number;
+  dy: number;
+};
+
 const zeroAddress =
   "0x0000000000000000000000000000000000000000" as Address;
 
@@ -57,6 +69,23 @@ const navigation: Array<{ id: ViewId; label: string }> = [
   { id: "airdrop", label: "Airdrop" },
   { id: "locker", label: "Locker" },
   { id: "admin", label: "Admin" },
+];
+
+const tokenomics = [
+  { label: "Initial Supply", value: "1,000,000 VLT", detail: "Minted at deploy" },
+  { label: "Treasury Reserve", value: "200,000 VLT", detail: "Airdrop community pool" },
+  { label: "Team Lock", value: "300,000 VLT", detail: "180-day token locker vesting" },
+  { label: "Public + Seed + Reserve", value: "500,000 VLT", detail: "200k + 200k + 100k" },
+];
+
+const contractMap = [
+  { name: "AccessManager", note: "Trái tim của hệ thống phân quyền (RBAC). Quản lý các vai trò Admin, Minter, Vault." },
+  { name: "LaunchToken", note: "Token ERC-20 gốc (VLT). Hỗ trợ Mint, Burn, Tạm dừng và chặn giao dịch trước khi Launch." },
+  { name: "TokenLocker", note: "Khóa Token theo thời gian (Vesting) dành cho Team, Dev và Quỹ đầu tư." },
+  { name: "StakingVault", note: "Nhận VLT stake từ người dùng và tính lãi tĩnh dưới dạng Điểm Airdrop." },
+  { name: "AirdropPoints", note: "Sổ cái lưu trữ điểm thưởng theo đợt (Snapshot). Đảm bảo tính bất biến." },
+  { name: "Treasury", note: "Két sắt an toàn của dự án. Chỉ giữ Token quỹ và cấp định mức (allowance) chi tiêu." },
+  { name: "AirdropDistributor", note: "Nơi người dùng Claim thưởng Airdrop. Tự động đối chiếu điểm và chống nhận 2 lần." },
 ];
 
 const lockDurations = [
@@ -174,6 +203,34 @@ function formatDuration(totalSeconds: number) {
   return `${minutes}m`;
 }
 
+function makeStarLayer(
+  total: number,
+  seed: number,
+  sizeBase: number,
+  sizeVariance: number,
+  durationBase: number,
+  durationVariance: number,
+  pullFactor: number,
+) {
+  const stars: StarPoint[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const left = (seed + i * 41) % 100;
+    const top = (seed * 2 + i * 67) % 100;
+    const size = sizeBase + (i % sizeVariance);
+    const duration = durationBase + (i % durationVariance);
+    stars.push({
+      left,
+      top,
+      size,
+      delay: (i % 13) * 0.35,
+      duration,
+      dx: (50 - left) * pullFactor,
+      dy: (50 - top) * pullFactor,
+    });
+  }
+  return stars;
+}
+
 function ActionButton({
   children,
   className,
@@ -185,13 +242,13 @@ function ActionButton({
   return (
     <button
       className={cx(
-        "inline-flex min-h-11 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-300/70 disabled:border-white/10 disabled:bg-white/[0.05] disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-white/[0.05]",
+        "inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-violet-300/70 disabled:border-white/10 disabled:bg-white/[0.04] disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-white/[0.04]",
         variant === "primary" &&
-          "bg-emerald-300 text-emerald-950 hover:bg-emerald-200",
+          "border-violet-200/35 bg-violet-500 text-violet-50 hover:bg-violet-400",
         variant === "secondary" &&
-          "border border-white/12 bg-white/[0.06] text-slate-100 hover:bg-white/[0.1]",
+          "border-white/18 bg-white/[0.08] text-slate-100 hover:bg-white/[0.14]",
         variant === "danger" &&
-          "bg-rose-400 text-rose-950 hover:bg-rose-300",
+          "border-rose-300/35 bg-rose-400 text-rose-950 hover:bg-rose-300",
         className,
       )}
       {...props}
@@ -215,17 +272,17 @@ function Panel({
   return (
     <section
       className={cx(
-        "rounded-lg border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/20",
+        "rounded-2xl border border-white/12 bg-[linear-gradient(160deg,rgba(255,255,255,0.09),rgba(255,255,255,0.035))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-md",
         className,
       )}
     >
       <div className="mb-5">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/70">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-100/70">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="mt-1 text-xl font-semibold text-white">{title}</h2>
+        <h2 className="mt-1 text-2xl font-semibold text-white">{title}</h2>
       </div>
       {children}
     </section>
@@ -244,20 +301,22 @@ function StatCard({
   tone?: "emerald" | "cyan" | "amber" | "rose";
 }) {
   const tones = {
-    emerald: "border-emerald-300/25 bg-emerald-300/[0.08]",
-    cyan: "border-cyan-300/25 bg-cyan-300/[0.08]",
-    amber: "border-amber-300/25 bg-amber-300/[0.08]",
-    rose: "border-rose-300/25 bg-rose-300/[0.08]",
+    emerald:
+      "border-emerald-200/20 bg-[linear-gradient(145deg,rgba(16,185,129,0.16),rgba(16,185,129,0.07))]",
+    cyan: "border-violet-200/20 bg-[linear-gradient(145deg,rgba(167,139,250,0.16),rgba(167,139,250,0.07))]",
+    amber:
+      "border-amber-200/20 bg-[linear-gradient(145deg,rgba(251,191,36,0.16),rgba(251,191,36,0.07))]",
+    rose: "border-rose-200/20 bg-[linear-gradient(145deg,rgba(251,113,133,0.16),rgba(251,113,133,0.07))]",
   };
 
   return (
-    <div className={cx("min-w-0 rounded-lg border p-4", tones[tone])}>
-      <p className="text-sm text-slate-300">{label}</p>
-      <p className="mt-2 break-words text-2xl font-semibold leading-tight text-white">
+    <div className={cx("min-w-0 rounded-xl border p-4", tones[tone])}>
+      <p className="text-sm text-slate-200">{label}</p>
+      <p className="mt-2 break-words text-2xl font-semibold leading-tight text-white md:text-3xl">
         {value}
       </p>
       {detail ? (
-        <p className="mt-2 break-words text-sm text-slate-400">{detail}</p>
+        <p className="mt-2 break-words text-sm text-slate-300/85">{detail}</p>
       ) : null}
     </div>
   );
@@ -272,11 +331,35 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-300">
+      <span className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </span>
       {children}
     </label>
+  );
+}
+
+function VltLogo({ size = 34 }: { size?: number }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white shadow-[0_10px_30px_rgba(255,255,255,0.16)]"
+      style={{ width: `${size}px`, height: `${size}px` }}
+      aria-hidden
+    >
+      <svg
+        viewBox="0 0 32 32"
+        width={Math.round(size * 0.7)}
+        height={Math.round(size * 0.7)}
+        fill="none"
+      >
+        <rect x="5" y="5" width="12" height="22" rx="4" fill="#05060f" />
+        <rect x="16" y="15" width="11" height="12" rx="4" fill="#05060f" />
+        <path
+          d="M18 6h8v8h-2.8V10.8L18 16V6Z"
+          fill="#05060f"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -287,16 +370,29 @@ export default function Home() {
   const isWrongNetwork = isConnected && chainId !== hardhatChain.id;
 
   const [activeView, setActiveView] = useState<ViewId>("overview");
+  const [appMode, setAppMode] = useState<AppMode>("home");
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
   const [snapshotId, setSnapshotId] = useState("0");
   const [lockAmount, setLockAmount] = useState("");
   const [lockDuration, setLockDuration] = useState("30");
   const [burnRate, setBurnRate] = useState("0");
-  const [notice, setNotice] = useState("Ready on Hardhat Local.");
+  const [notice, setNotice] = useState("Ready.");
   const [pendingHash, setPendingHash] = useState<Hash>();
   const [pendingLabel, setPendingLabel] = useState("");
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  const nearStars = useMemo(
+    () => makeStarLayer(50, 13, 2, 3, 9, 6, 1),
+    [],
+  );
+  const midStars = useMemo(
+    () => makeStarLayer(68, 27, 1, 3, 12, 7, 0.78),
+    [],
+  );
+  const farStars = useMemo(
+    () => makeStarLayer(92, 43, 1, 2, 16, 8, 0.62),
+    [],
+  );
 
   const { writeContractAsync, isPending: isWalletPending } = useWriteContract();
   const {
@@ -420,6 +516,13 @@ export default function Home() {
         functionName: "rewardRate",
         chainId: hardhatChain.id,
       },
+      {
+        address: contractAddresses.launchToken,
+        abi: launchTokenAbi,
+        functionName: "allowance",
+        args: [contractAddresses.treasury, contractAddresses.airdropDistributor],
+        chainId: hardhatChain.id,
+      },
     ],
     query: {
       refetchInterval: 5_000,
@@ -484,6 +587,7 @@ export default function Home() {
   const treasuryBalance = readResult<bigint>(dashboardData, 13, 0n);
   const isPaused = readResult<boolean>(dashboardData, 14, false);
   const rewardRate = readResult<bigint>(dashboardData, 15, 0n);
+  const treasuryDistributorAllowance = readResult<bigint>(dashboardData, 16, 0n);
 
   const stakedAmount = userInfo[0];
   const unclaimedStoredRewards = userInfo[2];
@@ -492,6 +596,10 @@ export default function Home() {
   const selectedPoints = readResult<bigint>(airdropData, 2, 0n);
   const isAirdropRewardTooLarge =
     selectedReward > 0n && selectedReward > treasuryBalance;
+  const isAirdropAllowanceInsufficient =
+    selectedReward > 0n && selectedReward > treasuryDistributorAllowance;
+  const isAirdropUnavailable =
+    isAirdropRewardTooLarge || isAirdropAllowanceInsufficient;
 
   const lockReadCount = Number(lockCount > 8n ? 8n : lockCount);
   const lockContracts = useMemo(
@@ -581,7 +689,7 @@ export default function Home() {
     }
 
     if (isWrongNetwork) {
-      setNotice("Switch MetaMask to Hardhat Local.");
+      setNotice("Switch MetaMask to local network.");
       return;
     }
 
@@ -603,6 +711,209 @@ export default function Home() {
     }
 
     return amount;
+  }
+
+  function jumpHomeSection(id: string) {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function goHomeAndJump(id: string) {
+    setAppMode("home");
+    window.setTimeout(() => jumpHomeSection(id), 60);
+  }
+
+  function renderTopBar() {
+    return (
+      <header className="sticky top-4 z-30 flex items-center justify-between rounded-2xl border border-white/10 bg-black/55 px-4 py-3 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <VltLogo size={40} />
+          <p className="text-2xl font-black leading-none tracking-tight text-white sm:text-4xl">
+            VAULT TOKEN
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              appMode === "home"
+                ? jumpHomeSection("home-top")
+                : goHomeAndJump("home-top")
+            }
+            className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-white/12"
+          >
+            Home
+          </button>
+          <button
+            type="button"
+            onClick={() => goHomeAndJump("tokenomics")}
+            className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-white/12"
+          >
+            Tokenomics
+          </button>
+          <button
+            type="button"
+            onClick={() => goHomeAndJump("contracts-map")}
+            className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-white/12"
+          >
+            7 Contracts
+          </button>
+          <button
+            type="button"
+            onClick={() => setAppMode("console")}
+            className="rounded-xl border border-violet-200/35 bg-violet-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-violet-400"
+          >
+            Console
+          </button>
+        </div>
+      </header>
+    );
+  }
+
+  function renderHomeContent() {
+    return (
+      <div className="flex flex-col gap-6 pb-20">
+
+          <section className="relative z-10 flex min-h-[82vh] flex-col items-center justify-center overflow-hidden py-16 text-center">
+            <div className="pointer-events-none absolute z-0 left-1/2 top-[52%] h-[380px] w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.24),rgba(2,132,199,0.08)_45%,transparent_74%)] blur-3xl" />
+            <div className="pointer-events-none absolute z-0 left-1/2 top-[52%] h-[140px] w-[140px] -translate-x-1/2 -translate-y-1/2 rounded-full black-hole-core" />
+            <h1 className="max-w-5xl text-4xl font-black tracking-tight text-white sm:text-6xl">
+              Dự Án Token ERC-20 Trên Mạng Ethereum Sepolia
+            </h1>
+            <p className="mt-5 max-w-3xl text-base text-slate-300 sm:text-lg">
+              Dự án thiết kế và triển khai toàn diện hệ thống Token ERC-20 kết hợp cơ chế Staking,
+              phân phối Airdrop, khóa Token (Vesting) và Quản trị phân quyền (RBAC). 
+              Hệ thống được xây dựng theo kiến trúc modular gồm 7 Smart Contracts đảm bảo tính bảo mật và minh bạch.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setAppMode("console")}
+                className="rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/12"
+              >
+                Xem Trang Thai On-chain
+              </button>
+            </div>
+          </section>
+
+          <section id="tokenomics" className="mt-10 space-y-6">
+            <Panel title="PHẦN 1: THIẾT KẾ TOKEN (TOKENOMICS)">
+              <div className="space-y-8">
+                {/* 1. Chọn tên & danh tính Token */}
+                <div>
+                  <h3 className="mb-4 text-xl font-semibold text-cyan-200">1. Danh tính Token</h3>
+                  <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/40">
+                    <table className="w-full text-left text-sm text-slate-300">
+                      <thead className="bg-white/5 text-slate-200">
+                        <tr>
+                          <th className="px-4 py-3 font-medium">Thông số</th>
+                          <th className="px-4 py-3 font-medium">Giá trị</th>
+                          <th className="px-4 py-3 font-medium">Giải thích</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        <tr>
+                          <td className="px-4 py-3 font-medium text-white">Tên đầy đủ</td>
+                          <td className="px-4 py-3">VaultToken</td>
+                          <td className="px-4 py-3">Tên hiển thị trên ví, sàn giao dịch</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-3 font-medium text-white">Ký hiệu (Symbol)</td>
+                          <td className="px-4 py-3 text-cyan-300 font-bold">VLT</td>
+                          <td className="px-4 py-3">Viết tắt 3-5 ký tự</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-3 font-medium text-white">Decimals</td>
+                          <td className="px-4 py-3">18</td>
+                          <td className="px-4 py-3">1 VLT = 10^18 đơn vị nhỏ nhất</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-3 font-medium text-white">Mạng</td>
+                          <td className="px-4 py-3 text-emerald-300">Ethereum Sepolia</td>
+                          <td className="px-4 py-3">Testnet miễn phí</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 2. Tổng cung (Supply Model) */}
+                <div>
+                  <h3 className="mb-4 text-xl font-semibold text-cyan-200">2. Tổng cung (Supply Model)</h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <StatCard label="Initial Supply" value="1,000,000 VLT" detail="Số token tạo ra khi deploy, cấp cho admin" tone="cyan" />
+                    <StatCard label="Max Supply (Cap)" value="10,000,000 VLT" detail="Giới hạn tuyệt đối, code cứng không ai sửa được" tone="rose" />
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-4">
+                    <div className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200 border border-emerald-500/20">
+                      <span className="font-semibold">Mintable:</span> Có (Minter role có thể in thêm khi cần)
+                    </div>
+                    <div className="rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-200 border border-amber-500/20">
+                      <span className="font-semibold">Burnable:</span> Có (Ai cũng có thể đốt token của mình)
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Phân bổ Token */}
+                <div>
+                  <h3 className="mb-4 text-xl font-semibold text-cyan-200">3. Phân bổ 1,000,000 VLT ban đầu</h3>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
+                      <p className="text-2xl mb-1">🏗️</p>
+                      <p className="text-lg font-semibold text-white">Team/Dev (30%)</p>
+                      <p className="text-cyan-300 font-medium">300,000 VLT</p>
+                      <p className="mt-2 text-sm text-slate-400">Khóa 180 ngày. Trả thưởng cho team phát triển.</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
+                      <p className="text-2xl mb-1">🛒</p>
+                      <p className="text-lg font-semibold text-white">Public Sale (20%)</p>
+                      <p className="text-cyan-300 font-medium">200,000 VLT</p>
+                      <p className="mt-2 text-sm text-slate-400">Không khóa. Bán ra thị trường.</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
+                      <p className="text-2xl mb-1">💼</p>
+                      <p className="text-lg font-semibold text-white">Quỹ gọi vốn (20%)</p>
+                      <p className="text-cyan-300 font-medium">200,000 VLT</p>
+                      <p className="mt-2 text-sm text-slate-400">Theo thỏa thuận. Bán cho quỹ đầu tư chiến lược.</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
+                      <p className="text-2xl mb-1">🎁</p>
+                      <p className="text-lg font-semibold text-white">Community (20%)</p>
+                      <p className="text-cyan-300 font-medium">200,000 VLT</p>
+                      <p className="mt-2 text-sm text-slate-400">Airdrop, thưởng hệ sinh thái qua Staking.</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
+                      <p className="text-2xl mb-1">🏦</p>
+                      <p className="text-lg font-semibold text-white">Reserve (10%)</p>
+                      <p className="text-cyan-300 font-medium">100,000 VLT</p>
+                      <p className="mt-2 text-sm text-slate-400">Không khóa. Admin giữ dự phòng khẩn cấp.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          </section>
+
+          <section id="contracts-map" className="mt-10 space-y-6">
+            <Panel title="PHẦN 2: TỔNG QUAN HỆ THỐNG 7 SMART CONTRACT">
+              <p className="text-slate-300">
+                Hệ thống tuân thủ chặt chẽ kiến trúc phân tán với 4 tầng: Lõi (Core), Tính năng (Features), Ngân khố (Fund), và Phân phối (Distribution). Dưới đây là chức năng cơ bản của từng hợp đồng:
+              </p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {contractMap.map((item) => (
+                  <div key={item.name} className="rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-400/50 hover:bg-white/10">
+                    <p className="text-xl font-bold text-white">{item.name}</p>
+                    <p className="mt-2 text-sm text-slate-300 leading-relaxed">{item.note}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </section>
+      </div>
+    );
   }
 
   function renderOverview() {
@@ -658,7 +969,7 @@ export default function Home() {
                   "rounded-md px-3 py-1 text-sm font-semibold",
                   isPaused
                     ? "bg-rose-300/15 text-rose-200"
-                    : "bg-cyan-300/15 text-cyan-200",
+                    : "bg-violet-300/15 text-violet-200",
                 )}
               >
                 {isPaused ? "Paused" : "Active"}
@@ -700,7 +1011,13 @@ export default function Home() {
             </Field>
             <ActionButton
               className="w-full"
-              disabled={!address || !stakeInputWei || !tradingOpen || txBusy}
+              disabled={
+                !address ||
+                !stakeInputWei ||
+                !tradingOpen ||
+                (isPaused && !isAdmin) ||
+                txBusy
+              }
               onClick={() =>
                 void runTransaction(
                   needsStakeApproval ? "Approve staking vault" : "Stake VLT",
@@ -732,7 +1049,7 @@ export default function Home() {
 
             <Field label="Unstake amount">
               <input
-                className="w-full rounded-md border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+                className="w-full rounded-md border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-violet-300"
                 inputMode="decimal"
                 placeholder="0.0"
                 value={unstakeAmount}
@@ -742,7 +1059,7 @@ export default function Home() {
             <div className="grid gap-3 sm:grid-cols-2">
               <ActionButton
                 variant="secondary"
-                disabled={!address || txBusy}
+                disabled={!address || (isPaused && !isAdmin) || txBusy}
                 onClick={() =>
                   void runTransaction("Unstake VLT", async () => {
                     const amount = requireTokenAmount(unstakeAmount, "unstake");
@@ -831,7 +1148,7 @@ export default function Home() {
                 !address ||
                 selectedSnapshot === null ||
                 selectedReward === 0n ||
-                isAirdropRewardTooLarge ||
+                isAirdropUnavailable ||
                 selectedClaimed ||
                 txBusy
               }
@@ -870,12 +1187,14 @@ export default function Home() {
               detail={
                 isAirdropRewardTooLarge
                   ? "Exceeds Treasury. Redeploy after contract fix."
+                  : isAirdropAllowanceInsufficient
+                    ? "Treasury allowance too low. Admin must re-approve."
                   : selectedClaimed
                     ? "Claimed"
                     : "Available check"
               }
               tone={
-                selectedClaimed || isAirdropRewardTooLarge ? "rose" : "emerald"
+                selectedClaimed || isAirdropUnavailable ? "rose" : "emerald"
               }
             />
             <StatCard
@@ -925,7 +1244,13 @@ export default function Home() {
             </Field>
             <ActionButton
               className="w-full"
-              disabled={!address || !lockInputWei || !tradingOpen || txBusy}
+              disabled={
+                !address ||
+                !lockInputWei ||
+                !tradingOpen ||
+                (isPaused && !isAdmin) ||
+                txBusy
+              }
               onClick={() =>
                 void runTransaction(
                   needsLockApproval ? "Approve token locker" : "Lock VLT",
@@ -955,7 +1280,14 @@ export default function Home() {
           </div>
         </Panel>
 
-        <Panel title="Locks" eyebrow={`${lockCount.toString()} records`}>
+        <Panel
+          title="Locks"
+          eyebrow={
+            lockCount > BigInt(locks.length)
+              ? `showing ${locks.length}/${lockCount.toString()} records`
+              : `${lockCount.toString()} records`
+          }
+        >
           {locks.length === 0 ? (
             <div className="rounded-lg border border-white/10 bg-black/20 p-5 text-sm text-slate-300">
               No locks for this wallet.
@@ -965,9 +1297,13 @@ export default function Home() {
               {locks.map((lock) => {
                 const remaining = secondsUntil(lock.unlockTime, now);
                 const ready = remaining === 0 && !lock.isReleased;
+                const maxLockWindowSeconds = 365 * 86_400;
                 const progress = ready
                   ? 100
-                  : Math.max(8, 100 - Math.min(92, remaining / 9_460_800));
+                  : Math.max(
+                      8,
+                      100 - Math.min(92, (remaining / maxLockWindowSeconds) * 92),
+                    );
 
                 return (
                   <div
@@ -1171,65 +1507,94 @@ export default function Home() {
     admin: renderAdmin,
   }[activeView];
 
-  return (
-    <main className="min-h-screen overflow-hidden bg-[#05070d] text-slate-100">
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(25,211,162,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(52,211,235,0.05)_1px,transparent_1px)] bg-[size:44px_44px]" />
-      <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(ellipse_at_top,rgba(25,211,162,0.16),transparent_58%)]" />
+  function renderConsoleContent() {
+    return (
+      <div className="flex flex-col gap-6 pb-20">
 
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <header className="rounded-lg border border-white/10 bg-[#09111a]/90 p-4 shadow-2xl shadow-black/30 backdrop-blur">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200/75">
-                Vault Token
-              </p>
-              <h1 className="mt-1 text-3xl font-semibold text-white sm:text-4xl">
-                Web3 Control Console
-              </h1>
-            </div>
+          <div className="rounded-2xl border border-white/12 bg-[linear-gradient(145deg,rgba(10,18,31,0.92),rgba(9,16,28,0.8))] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.42)] backdrop-blur-md">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <nav className="grid grid-cols-2 gap-2 sm:flex">
+                {navigation.map((item) => (
+                  <button
+                    className={cx(
+                      "min-h-10 rounded-xl border px-4 text-sm font-semibold transition",
+                      activeView === item.id
+                        ? "border-violet-200/35 bg-violet-500 text-violet-50"
+                        : "border-white/12 bg-white/[0.05] text-slate-200 hover:bg-white/[0.1]",
+                    )}
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveView(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div
-                className={cx(
-                  "rounded-md border px-3 py-2 text-sm font-medium",
-                  isWrongNetwork
-                    ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
-                    : "border-emerald-300/25 bg-emerald-300/10 text-emerald-100",
-                )}
-              >
-                {isWrongNetwork ? "Wrong network" : hardhatChain.name}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-slate-300">
+                  {isDashboardLoading ? "Syncing contract reads..." : notice}
+                </div>
+                <ConnectButton />
               </div>
-              <ConnectButton />
             </div>
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-4 lg:flex-row lg:items-center lg:justify-between">
-            <nav className="grid grid-cols-2 gap-2 sm:flex">
-              {navigation.map((item) => (
-                <button
-                  className={cx(
-                    "min-h-10 rounded-md px-4 text-sm font-semibold transition",
-                    activeView === item.id
-                      ? "bg-white text-slate-950"
-                      : "bg-white/[0.06] text-slate-300 hover:bg-white/[0.1]",
-                  )}
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveView(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
+          {viewContent()}
+      </div>
+    );
+  }
 
-            <div className="rounded-md border border-white/10 bg-black/25 px-3 py-2 text-sm text-slate-300">
-              {isDashboardLoading ? "Syncing contract reads..." : notice}
-            </div>
-          </div>
-        </header>
+  return (
+    <main className="relative min-h-screen overflow-x-hidden bg-black text-slate-100">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-black" />
+      <div className="pointer-events-none fixed inset-0 z-[50] animate-[flash-bang_10s_ease-in-out_infinite]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.18),transparent_50%)]" />
+      
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        {farStars.map((star, index) => (
+          <span
+            key={`far-${star.left}-${star.top}-${index}`}
+            className="home-star home-star--far"
+            style={{
+              left: `${star.left}%`, top: `${star.top}%`,
+              width: `${star.size}px`, height: `${star.size}px`,
+              animationDelay: `${star.delay}s`, animationDuration: `${star.duration}s`,
+              "--dx": `${star.dx}vw`, "--dy": `${star.dy}vh`,
+            } as CSSProperties}
+          />
+        ))}
+        {midStars.map((star, index) => (
+          <span
+            key={`mid-${star.left}-${star.top}-${index}`}
+            className="home-star home-star--mid"
+            style={{
+              left: `${star.left}%`, top: `${star.top}%`,
+              width: `${star.size}px`, height: `${star.size}px`,
+              animationDelay: `${star.delay}s`, animationDuration: `${star.duration}s`,
+              "--dx": `${star.dx}vw`, "--dy": `${star.dy}vh`,
+            } as CSSProperties}
+          />
+        ))}
+        {nearStars.map((star, index) => (
+          <span
+            key={`near-${star.left}-${star.top}-${index}`}
+            className="home-star home-star--near"
+            style={{
+              left: `${star.left}%`, top: `${star.top}%`,
+              width: `${star.size}px`, height: `${star.size}px`,
+              animationDelay: `${star.delay}s`, animationDuration: `${star.duration}s`,
+              "--dx": `${star.dx}vw`, "--dy": `${star.dy}vh`,
+            } as CSSProperties}
+          />
+        ))}
+      </div>
 
-        {viewContent()}
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
+        {renderTopBar()}
+        {appMode === "home" ? renderHomeContent() : renderConsoleContent()}
       </div>
     </main>
   );
 }
+
