@@ -1,50 +1,16 @@
 import { beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { expect } from "chai";
 import hre from "hardhat";
-
-const POINTS_RECORDER_ABI = [
-  "event PointsAdded(address indexed user, uint256 points)",
-];
-
-function buildPointsRecorderRuntimeBytecode(ethers: any): string {
-  const eventTopic = ethers.id("PointsAdded(address,uint256)").slice(2);
-
-  return [
-    "0x",
-    "60",
-    "24",
-    "35",
-    "60",
-    "00",
-    "52",
-    "60",
-    "04",
-    "35",
-    "7f",
-    eventTopic,
-    "60",
-    "20",
-    "60",
-    "00",
-    "a2",
-    "60",
-    "00",
-    "60",
-    "00",
-    "f3",
-  ].join("");
-}
 
 describe("StakingVault", function () {
   let ethers: any;
   let networkHelpers: any;
   let admin: any;
   let user1: any;
+  let accessManager: any;
   let token: any;
   let vault: any;
   let airdropPoints: any;
-  let pointsRecorderInterface: any;
   let initialUserBalance: bigint;
 
   async function expectRevert(promise: Promise<any>, expectedError: string) {
@@ -68,18 +34,14 @@ describe("StakingVault", function () {
 
     [admin, user1] = await ethers.getSigners();
 
-    const TokenFactory = await ethers.getContractFactory("MockLaunchToken");
-    token = await TokenFactory.deploy();
+    const AccessManagerFactory = await ethers.getContractFactory("AccessManager");
+    accessManager = await AccessManagerFactory.deploy();
+
+    const TokenFactory = await ethers.getContractFactory("LaunchToken");
+    token = await TokenFactory.deploy(await accessManager.getAddress());
 
     const AirdropPointsFactory = await ethers.getContractFactory("AirdropPoints");
-    airdropPoints = await AirdropPointsFactory.deploy();
-
-    await networkHelpers.setCode(
-      await airdropPoints.getAddress(),
-      buildPointsRecorderRuntimeBytecode(ethers)
-    );
-
-    pointsRecorderInterface = new ethers.Interface(POINTS_RECORDER_ABI);
+    airdropPoints = await AirdropPointsFactory.deploy(await accessManager.getAddress());
 
     const VaultFactory = await ethers.getContractFactory("StakingVault");
     vault = await VaultFactory.deploy(
@@ -87,8 +49,11 @@ describe("StakingVault", function () {
       await airdropPoints.getAddress()
     );
 
+    await accessManager.grantRole(await airdropPoints.VAULT_ROLE(), await vault.getAddress());
+
     initialUserBalance = ethers.parseEther("1000");
     await token.transfer(user1.address, initialUserBalance);
+    await token.openTrading();
   });
 
   describe("Deploy", function () {
@@ -168,38 +133,33 @@ describe("StakingVault", function () {
       assert.ok(pendingAfter > pendingBefore);
     });
 
-    it("7. claimRewards() phải ghi điểm sang AirdropPoints", async function () {
+    it("7. claimRewards() phải ghi điểm sang AirdropPoints thật", async function () {
       const amount = ethers.parseEther("100");
       await stakeAsUser(amount);
       await networkHelpers.time.increase(120);
 
       const pendingBeforeClaim = await vault.pendingRewards(user1.address);
-      const tx = await vault.connect(user1).claimRewards();
-      const receipt = await tx.wait();
-      const airdropPointsAddress = (await airdropPoints.getAddress()).toLowerCase();
-      const pointsLog = receipt.logs.find(
-        (log: any) => log.address.toLowerCase() === airdropPointsAddress
-      );
+      await vault.connect(user1).claimRewards();
 
-      assert.ok(pointsLog);
+      const recordedPoints = await airdropPoints.getCurrentPoints(user1.address);
+      const userInfo = await vault.userInfo(user1.address);
 
-      const parsedLog = pointsRecorderInterface.parseLog({
-        topics: pointsLog.topics,
-        data: pointsLog.data,
-      });
-
-      const recordedPoints = parsedLog?.args.points as bigint;
-
-      assert.ok(parsedLog);
-      assert.strictEqual(parsedLog.args.user, user1.address);
       assert.ok(recordedPoints > 0n);
       assert.ok(recordedPoints >= pendingBeforeClaim);
+      assert.strictEqual(await vault.pendingRewards(user1.address), 0n);
+      assert.strictEqual(userInfo.unclaimedRewards, 0n);
+    });
+
+    it("8. claimRewards() khi chưa có reward không cộng điểm", async function () {
+      await vault.connect(user1).claimRewards();
+
+      assert.strictEqual(await airdropPoints.getCurrentPoints(user1.address), 0n);
       assert.strictEqual(await vault.pendingRewards(user1.address), 0n);
     });
   });
 
   describe("Emergency Withdraw", function () {
-    it("8. emergencyWithdraw() phải trả toàn bộ token và reset state reward", async function () {
+    it("9. emergencyWithdraw() phải trả toàn bộ token và reset state reward", async function () {
       const amount = ethers.parseEther("250");
       await stakeAsUser(amount);
       await networkHelpers.time.increase(600);
