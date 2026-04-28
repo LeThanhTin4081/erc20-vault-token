@@ -19,7 +19,7 @@ interface IAccessManager {
 
 contract Treasury {
 
-    // ========== STATE VARIABLES ==========
+    // STATE VARIABLES
 
     // Địa chỉ token ERC-20 (LaunchToken)
     IERC20 public token;
@@ -30,7 +30,7 @@ contract Treasury {
     // Constant: role admin (phải giống hệt khai báo trong AccessManager.sol)
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    // ========== EVENTS ==========
+    // EVENTS
 
     // Khi ai đó nạp token vào Treasury
     event Deposited(address indexed from, uint256 amount);
@@ -41,7 +41,7 @@ contract Treasury {
     // Khi admin cấp allowance cho 1 contract được rút token
     event SpenderApproved(address indexed spender, uint256 amount);
 
-    // ========== MODIFIER ==========
+    // MODIFIER
 
     // Chỉ cho phép tài khoản có ADMIN_ROLE gọi hàm
     // Gọi sang AccessManager để kiểm tra
@@ -53,7 +53,7 @@ contract Treasury {
         _;
     }
 
-    // ========== CONSTRUCTOR ==========
+    // CONSTRUCTOR
 
     /**
      * @dev Khởi tạo contract, lưu địa chỉ token và accessManager
@@ -65,7 +65,7 @@ contract Treasury {
         accessManager = IAccessManager(_accessManager);
     }
 
-    // ========== FUNCTIONS ==========
+    // FUNCTIONS
 
     /**
      * @dev Nạp token vào Treasury (ai cũng gọi được)
@@ -125,7 +125,7 @@ contract Treasury {
         // Không cho approve cho địa chỉ 0
         require(spender != address(0), "Treasury: cannot approve zero address");
 
-        // === XỬ LÝ RACE CONDITION ===
+        // XỬ LÝ RACE CONDITION
         // Bước 1: Kiểm tra allowance hiện tại
         uint256 currentAllowance = token.allowance(address(this), spender);
 
@@ -142,7 +142,7 @@ contract Treasury {
         emit SpenderApproved(spender, amount);
     }
 
-    // ========== VIEW FUNCTIONS ==========
+    // VIEW FUNCTIONS
 
     /**
      * @dev Xem số dư token hiện tại trong Treasury

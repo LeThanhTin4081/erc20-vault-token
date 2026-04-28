@@ -9,8 +9,20 @@ interface IAirdropPoints {
     function addPoints(address user, uint256 points) external;
 }
 
+// Interface để đọc trạng thái launch từ LaunchToken
+interface ILaunchToken {
+    function tradingOpen() external view returns (bool);
+}
+
+/**
+ * @title StakingVault
+ * @dev Cho phép người dùng Stake Token vào để lấy thưởng.
+ * Update số điểm sang AirdropPoints.
+ */
 contract StakingVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
+
+    // STATE VARIABLES
 
     uint256 public constant rewardRate = 1e18;
     uint256 public constant ACC_REWARD_PRECISION = 1e12;
@@ -29,7 +41,6 @@ contract StakingVault is ReentrancyGuard {
     uint256 public totalStaked;
     uint256 public lastRewardTime;
     uint256 public accRewardPerShare;
-
     event Staked(address indexed user, uint256 amount);
     event Unstaked(address indexed user, uint256 amount);
     event RewardsClaimed(address indexed user, uint256 reward);

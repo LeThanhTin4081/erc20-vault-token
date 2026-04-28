@@ -18,7 +18,7 @@ describe("Treasury", function () {
   let spender: any;       // Ví đóng vai trò là contract Airdrop (được phép rút tiền)
   let ethers: any;        // Thư viện ethers để tương tác blockchain
 
-  // ========== HELPER: Kiểm tra revert ==========
+  // HELPER: Kiểm tra revert
   // Hàm phụ trợ dùng để bắt lỗi revert (thay thế cho .revertedWith)
   async function expectRevert(promise: Promise<any>, expectedError: string) {
     try {
@@ -30,7 +30,7 @@ describe("Treasury", function () {
     }
   }
 
-  // ========== SETUP ==========
+  // SETUP
   // beforeEach: Chạy đoạn code này TRƯỚC MỖI test case (it)
   beforeEach(async function () {
     // 1. Kết nối vào mạng (giả lập) của Hardhat để lấy thư viện ethers
@@ -40,13 +40,16 @@ describe("Treasury", function () {
     // 2. Lấy danh sách tài khoản từ Hardhat
     [admin, user1, spender] = await ethers.getSigners();
 
-    // 3. Deploy MockAccessManager (admin sẽ tự động có quyền ADMIN_ROLE)
-    const AccessManagerFactory = await ethers.getContractFactory("MockAccessManager");
+    // 3. Deploy AccessManager thật (admin sẽ tự động có quyền ADMIN_ROLE)
+    const AccessManagerFactory = await ethers.getContractFactory("AccessManager");
     accessManager = await AccessManagerFactory.deploy();
 
-    // 4. Deploy MockLaunchToken (admin sẽ nhận được 1,000,000 token VLT)
-    const TokenFactory = await ethers.getContractFactory("MockLaunchToken");
-    token = await TokenFactory.deploy();
+    // 4. Deploy LaunchToken thật (admin sẽ nhận được 1,000,000 token VLT)
+    const TokenFactory = await ethers.getContractFactory("LaunchToken");
+    token = await TokenFactory.deploy(await accessManager.getAddress());
+    
+    // Mở giao dịch để user1 có thể transfer token trong lúc test nạp/rút quỹ
+    await token.connect(admin).openTrading();
 
     // 5. Deploy Treasury (truyền địa chỉ của Token và AccessManager vào constructor)
     const TreasuryFactory = await ethers.getContractFactory("Treasury");
@@ -59,7 +62,7 @@ describe("Treasury", function () {
     await token.transfer(user1.address, ethers.parseEther("100000"));
   });
 
-  // ========== TEST CASE: THEO ĐÚNG 10 TRƯỜNG HỢP TRONG FILE KẾ HOẠCH ==========
+  // TEST CASE: THEO ĐÚNG 10 TRƯỜNG HỢP TRONG FILE KẾ HOẠCH
 
   describe("Deploy", function () {
     // Test Case 1: Kiểm tra xem constructor có lưu đúng địa chỉ reference không

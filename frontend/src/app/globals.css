@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05060f;
+  --foreground: #f3f5ff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body), "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+html {
+  background: var(--background);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display), "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: #7c61ff;
+  color: #ffffff;
+}
+
+.home-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.home-star--far {
+  opacity: 0.42;
+  filter: blur(0.2px);
+  animation-name: star-pull-far;
+}
+
+.home-star--mid {
+  opacity: 0.72;
+  filter: blur(0.1px);
+  animation-name: star-pull-mid;
+}
+
+.home-star--near {
+  opacity: 0.95;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.88);
+  animation-name: star-pull-near;
+}
+
+.black-hole-core {
+  background: radial-gradient(circle, #000 10%, rgba(10, 0, 20, 0.8) 50%, transparent 80%);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(100, 50, 255, 0.1);
+  animation: pulse-hole 4s ease-in-out infinite;
+}
+
+@keyframes pulse-hole {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+@keyframes flash-bang {
+  0%, 88% {
+    background-color: rgba(255, 255, 255, 0);
+  }
+  92% {
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+  98% {
+    background-color: rgba(255, 255, 255, 0);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes star-pull-near {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.4);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  82% {
+    opacity: 1;
+    transform: translate3d(calc(var(--dx) * 0.82), calc(var(--dy) * 0.82), 0)
+      scale(1.03);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx), var(--dy), 0) scale(0.08);
+  }
+}
+
+@keyframes star-pull-mid {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.5);
+  }
+  35% {
+    opacity: 0.78;
+  }
+  85% {
+    opacity: 0.9;
+    transform: translate3d(calc(var(--dx) * 0.74), calc(var(--dy) * 0.74), 0)
+      scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx), var(--dy), 0) scale(0.12);
+  }
+}
+
+@keyframes star-pull-far {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.6);
+  }
+  45% {
+    opacity: 0.55;
+  }
+  88% {
+    opacity: 0.62;
+    transform: translate3d(calc(var(--dx) * 0.66), calc(var(--dy) * 0.66), 0)
+      scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx), var(--dy), 0) scale(0.18);
+  }
+}
+
+@keyframes vortex-spin {
+  from {
+    transform: rotateX(75deg) rotate(0deg);
+  }
+  to {
+    transform: rotateX(75deg) rotate(360deg);
+  }
+}
+
+@keyframes vortex-spin-reverse {
+  from {
+    transform: rotateX(75deg) rotate(360deg);
+  }
+  to {
+    transform: rotateX(75deg) rotate(0deg);
+  }
+}
+
+@keyframes vortex-core-pulse {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}

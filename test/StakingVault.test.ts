@@ -1,5 +1,6 @@
 import { beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { expect } from "chai";
 import hre from "hardhat";
 
 const POINTS_RECORDER_ABI = [

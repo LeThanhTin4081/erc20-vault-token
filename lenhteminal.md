@@ -17,15 +17,14 @@
 
 ---
 
-## 2. Lệnh Deploy
+## 2. Lệnh Deploy (Hardhat Ignition)
 
 | Lệnh | Mô tả | Khi nào dùng |
 |-------|--------|-------------|
-| `npx hardhat run scripts/deploy.ts --network hardhatMainnet` | Deploy lên mạng local (giả lập) | Test deploy trước khi lên testnet |
-| `npx hardhat ignition deploy ./ignition/modules/Token.ts --network hardhatMainnet` | Deploy bằng Ignition (local) | Cách deploy khác, dùng module |
-| `npx hardhat run scripts/deploy.ts --network sepolia` | Deploy lên Sepolia testnet (thật) | Khi code đã ổn, muốn deploy lên mạng thật |
-| `npx hardhat ignition deploy ./ignition/modules/Token.ts --network sepolia` | Deploy bằng Ignition (Sepolia) | Cách deploy khác trên testnet |
-| `npx hardhat run scripts/check-sepolia.ts --network sepolia --no-compile` | Kiểm tra contract đã deploy trên Sepolia | Xác nhận contract hoạt động đúng |
+| `npx hardhat ignition deploy ./ignition/modules/DeploySystem.ts --network hardhatMainnet` | Deploy lên mạng local (giả lập) | Test deploy trước khi lên testnet |
+| `npx hardhat ignition deploy ./ignition/modules/DeploySystem.ts --network sepolia` | Deploy lên Sepolia testnet (thật) | Khi code đã ổn, muốn deploy lên mạng thật |
+
+> **Lưu ý:** Trước khi deploy lại trên local, cần xóa thư mục cũ: `rm -rf ignition/deployments/chain-31337`
 
 ---
 
