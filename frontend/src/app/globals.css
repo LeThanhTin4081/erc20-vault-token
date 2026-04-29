@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-body), "Segoe UI", sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-sans: var(--font-body), "Fira Code", "Segoe UI", monospace;
+  --font-mono: var(--font-body), "Fira Code", "SFMono-Regular", monospace;
 }
 
 html {
@@ -21,7 +21,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), "Segoe UI", sans-serif;
+  font-family: var(--font-body), "Fira Code", "Segoe UI", monospace;
   min-height: 100vh;
 }
 
@@ -29,8 +29,8 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display), "Segoe UI", sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-body), "Fira Code", "Segoe UI", monospace;
+  letter-spacing: 0;
 }
 
 button,
@@ -47,9 +47,48 @@ button:disabled {
   cursor: not-allowed;
 }
 
+[data-rk] button[type="button"] {
+  background: #2e1065 !important;
+  border: 1px solid rgba(196, 181, 253, 0.48) !important;
+  color: #ede9fe !important;
+  box-shadow: 0 0 22px rgba(109, 40, 217, 0.22) !important;
+}
+
+[data-rk] button[type="button"]:hover {
+  background: #3b0764 !important;
+  border-color: rgba(221, 214, 254, 0.72) !important;
+}
+
 ::selection {
   background: #7c61ff;
   color: #ffffff;
+}
+
+.hero-cta-glow {
+  animation: cta-violet-breathe 2.8s ease-in-out infinite;
+}
+
+.app-loader {
+  animation: app-loader-fade 0.72s ease forwards;
+}
+
+.app-loader__orb {
+  width: 68px;
+  height: 68px;
+  border-radius: 9999px;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  background:
+    radial-gradient(circle, rgba(221, 214, 254, 0.18), transparent 42%),
+    conic-gradient(
+      from 0deg,
+      transparent,
+      rgba(167, 139, 250, 0.8),
+      transparent 38%
+    );
+  box-shadow:
+    0 0 28px rgba(124, 58, 237, 0.35),
+    inset 0 0 22px rgba(196, 181, 253, 0.12);
+  animation: app-loader-spin 1.4s linear infinite, app-loader-breathe 1.8s ease-in-out infinite;
 }
 
 .home-star {
@@ -80,30 +119,131 @@ button:disabled {
   animation-name: star-pull-near;
 }
 
-.black-hole-core {
-  background: radial-gradient(circle, #000 10%, rgba(10, 0, 20, 0.8) 50%, transparent 80%);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(100, 50, 255, 0.1);
-  animation: pulse-hole 4s ease-in-out infinite;
-}
-
-@keyframes pulse-hole {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.05); }
-}
-
-@keyframes flash-bang {
-  0%, 88% {
-    background-color: rgba(255, 255, 255, 0);
+@keyframes app-loader-fade {
+  0% {
+    opacity: 0;
   }
-  92% {
-    background-color: rgba(255, 255, 255, 0.85);
-  }
-  98% {
-    background-color: rgba(255, 255, 255, 0);
+  18%,
+  76% {
+    opacity: 1;
   }
   100% {
-    background-color: rgba(255, 255, 255, 0);
+    opacity: 0;
   }
+}
+
+@keyframes app-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes app-loader-breathe {
+  0%,
+  100% {
+    filter: brightness(0.82);
+  }
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes cta-violet-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(124, 58, 237, 0.24),
+      0 0 22px rgba(167, 139, 250, 0.12);
+    filter: brightness(0.92);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(167, 139, 250, 0.42),
+      0 0 36px rgba(124, 58, 237, 0.28);
+    filter: brightness(1.12);
+  }
+}
+
+.light-vortex {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: clamp(92px, 10vw, 132px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0.3;
+}
+
+.light-vortex__ring,
+.light-vortex__stream {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  mix-blend-mode: screen;
+}
+
+.light-vortex__ring--outer {
+  border: 1px solid rgba(196, 181, 253, 0.08);
+  background:
+    radial-gradient(circle, rgba(167, 139, 250, 0.08), transparent 62%),
+    conic-gradient(
+      from 120deg,
+      transparent 0deg,
+      rgba(255, 255, 255, 0.035) 24deg,
+      rgba(196, 181, 253, 0.12) 62deg,
+      transparent 118deg,
+      rgba(167, 139, 250, 0.11) 184deg,
+      transparent 260deg,
+      rgba(255, 255, 255, 0.025) 312deg,
+      transparent 360deg
+    );
+  filter: blur(14px);
+  animation: light-vortex-spin 30s linear infinite;
+}
+
+.light-vortex__ring--inner {
+  inset: 20%;
+  border: 1px solid rgba(221, 214, 254, 0.06);
+  background:
+    radial-gradient(circle, rgba(221, 214, 254, 0.08), transparent 34%),
+    conic-gradient(
+      from 20deg,
+      transparent,
+      rgba(221, 214, 254, 0.09),
+      rgba(139, 92, 246, 0.12),
+      transparent 54%
+    );
+  filter: blur(12px);
+  animation: light-vortex-spin-reverse 24s linear infinite;
+}
+
+.light-vortex__stream--one {
+  inset: 10%;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  background: conic-gradient(
+    from 260deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.025) 24deg,
+    rgba(196, 181, 253, 0.09) 44deg,
+    transparent 74deg,
+    transparent 360deg
+  );
+  filter: blur(10px);
+  animation: light-vortex-pulse 10s ease-in-out infinite;
+}
+
+.light-vortex__stream--two {
+  inset: 24%;
+  background: radial-gradient(
+    circle,
+    rgba(221, 214, 254, 0.08),
+    rgba(124, 58, 237, 0.04) 42%,
+    transparent 72%
+  );
+  filter: blur(18px);
+  animation: light-vortex-core 9s ease-in-out infinite;
 }
 
 @keyframes star-pull-near {
@@ -122,6 +262,83 @@ button:disabled {
   100% {
     opacity: 0;
     transform: translate3d(var(--dx), var(--dy), 0) scale(0.08);
+  }
+}
+
+@keyframes light-vortex-spin {
+  from {
+    transform: rotate(0deg) scale(0.96);
+  }
+  to {
+    transform: rotate(360deg) scale(0.96);
+  }
+}
+
+@keyframes light-vortex-spin-reverse {
+  from {
+    transform: rotate(360deg) scale(1);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes light-vortex-pulse {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: rotate(-8deg) scale(0.92);
+  }
+  50% {
+    opacity: 0.86;
+    transform: rotate(18deg) scale(1.04);
+  }
+}
+
+@keyframes light-vortex-core {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.08);
+  }
+}
+
+.reveal-section {
+  animation: reveal-up both;
+  animation-timeline: view();
+  animation-range: entry 8% cover 26%;
+}
+
+.soft-card {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal-section {
+    animation: none;
   }
 }
 

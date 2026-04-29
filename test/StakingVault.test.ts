@@ -1,199 +1,182 @@
-import { describe, it, beforeEach } from "node:test";
-import { expect } from "chai";
+import { beforeEach, describe, it } from "node:test";
+import assert from "node:assert/strict";
 import hre from "hardhat";
 
 describe("StakingVault", function () {
-  let accessManager: any;
-  let launchToken: any;
-  let airdropPoints: any;
-  let stakingVault: any;
+  let ethers: any;
+  let networkHelpers: any;
   let admin: any;
   let user1: any;
-  let user2: any;
-  let ethers: any;
-  let VAULT_ROLE: any;
+  let accessManager: any;
+  let token: any;
+  let vault: any;
+  let airdropPoints: any;
+  let initialUserBalance: bigint;
 
   async function expectRevert(promise: Promise<any>, expectedError: string) {
     try {
       await promise;
-      expect.fail(`Expected transaction to revert with: ${expectedError}`);
+      assert.fail(`Expected transaction to revert with: ${expectedError}`);
     } catch (error: any) {
-      expect(error.message).to.include(expectedError);
+      assert.match(error.message, new RegExp(expectedError.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     }
+  }
+
+  async function stakeAsUser(amount: bigint) {
+    await token.connect(user1).approve(await vault.getAddress(), amount);
+    await vault.connect(user1).stake(amount);
   }
 
   beforeEach(async function () {
     const connection = await hre.network.connect();
     ethers = connection.ethers;
+    networkHelpers = connection.networkHelpers;
 
-    [admin, user1, user2] = await ethers.getSigners();
+    [admin, user1] = await ethers.getSigners();
 
-    // 1. Deploy AccessManager
-    const AccessManager = await ethers.getContractFactory("AccessManager");
-    accessManager = await AccessManager.deploy();
+    const AccessManagerFactory = await ethers.getContractFactory("AccessManager");
+    accessManager = await AccessManagerFactory.deploy();
 
-    // 2. Deploy LaunchToken
-    const LaunchToken = await ethers.getContractFactory("LaunchToken");
-    launchToken = await LaunchToken.deploy(await accessManager.getAddress());
+    const TokenFactory = await ethers.getContractFactory("LaunchToken");
+    token = await TokenFactory.deploy(await accessManager.getAddress());
 
-    // 3. Deploy AirdropPoints (truyền AccessManager vào constructor)
-    const AirdropPoints = await ethers.getContractFactory("AirdropPoints");
-    airdropPoints = await AirdropPoints.deploy(await accessManager.getAddress());
+    const AirdropPointsFactory = await ethers.getContractFactory("AirdropPoints");
+    airdropPoints = await AirdropPointsFactory.deploy(await accessManager.getAddress());
 
-    // 4. Deploy StakingVault
-    const StakingVault = await ethers.getContractFactory("StakingVault");
-    stakingVault = await StakingVault.deploy(
-      await launchToken.getAddress(),
+    const VaultFactory = await ethers.getContractFactory("StakingVault");
+    vault = await VaultFactory.deploy(
+      await token.getAddress(),
       await airdropPoints.getAddress()
     );
 
-    // Mở khóa giao dịch để test
-    await launchToken.openTrading();
+    await accessManager.grantRole(await airdropPoints.VAULT_ROLE(), await vault.getAddress());
 
-    // Lấy động VAULT_ROLE
-    VAULT_ROLE = await airdropPoints.VAULT_ROLE();
-
-    // Cấp quyền VAULT_ROLE cho StakingVault trên AccessManager (đúng kiến trúc)
-    await accessManager.grantRole(VAULT_ROLE, await stakingVault.getAddress());
-
-    // Chuyển một ít token cho user1 để test
-    const stakeAmount = ethers.parseEther("1000");
-    await launchToken.transfer(user1.address, stakeAmount);
-    await launchToken.connect(user1).approve(await stakingVault.getAddress(), stakeAmount);
+    initialUserBalance = ethers.parseEther("1000");
+    await token.transfer(user1.address, initialUserBalance);
+    await token.openTrading();
   });
 
   describe("Deploy", function () {
     it("1. Deploy StakingVault thành công", async function () {
-      expect(await stakingVault.stakingToken()).to.equal(await launchToken.getAddress());
-      expect(await stakingVault.airdropPoints()).to.equal(await airdropPoints.getAddress());
-    });
-  });
-
-  describe("Launch Gating", function () {
-    it("2. stake - trước khi launch -> revert", async function () {
-      // Deploy lại hệ thống MỚI (chưa openTrading)
-      const AccessManager2 = await ethers.getContractFactory("AccessManager");
-      const am2 = await AccessManager2.deploy();
-
-      const LaunchToken2 = await ethers.getContractFactory("LaunchToken");
-      const lt2 = await LaunchToken2.deploy(await am2.getAddress());
-
-      const AirdropPoints2 = await ethers.getContractFactory("AirdropPoints");
-      const ap2 = await AirdropPoints2.deploy(await am2.getAddress());
-
-      const StakingVault2 = await ethers.getContractFactory("StakingVault");
-      const sv2 = await StakingVault2.deploy(await lt2.getAddress(), await ap2.getAddress());
-
-      // Chuyển token cho user1 (admin có thể chuyển trước launch)
-      await lt2.transfer(user1.address, ethers.parseEther("100"));
-      await lt2.connect(user1).approve(await sv2.getAddress(), ethers.parseEther("100"));
-
-      // Cố stake khi chưa launch → revert
-      await expectRevert(
-        sv2.connect(user1).stake(ethers.parseEther("10")),
-        "StakingVault: system not launched yet"
-      );
+      assert.strictEqual(await vault.stakingToken(), await token.getAddress());
+      assert.strictEqual(await vault.airdropPoints(), await airdropPoints.getAddress());
+      assert.strictEqual(await vault.totalStaked(), 0n);
     });
   });
 
   describe("Stake", function () {
-    it("3. stake - phải lớn hơn 0", async function () {
-      await expectRevert(
-        stakingVault.connect(user1).stake(0),
-        "StakingVault: amount must be > 0"
-      );
+    it("2. User approve token rồi stake thành công", async function () {
+      const amount = ethers.parseEther("100");
+      const userBalanceBefore = await token.balanceOf(user1.address);
+
+      await token.connect(user1).approve(await vault.getAddress(), amount);
+      await vault.connect(user1).stake(amount);
+
+      const userBalanceAfter = await token.balanceOf(user1.address);
+      const userInfo = await vault.userInfo(user1.address);
+
+      assert.strictEqual(userBalanceBefore - userBalanceAfter, amount);
+      assert.strictEqual(await token.balanceOf(await vault.getAddress()), amount);
+      assert.strictEqual(userInfo.amount, amount);
+      assert.strictEqual(await vault.totalStaked(), amount);
     });
 
-    it("4. stake - nạp token thành công", async function () {
-      const stakeAmount = ethers.parseEther("100");
-      await stakingVault.connect(user1).stake(stakeAmount);
-
-      const userInfo = await stakingVault.userInfo(user1.address);
-      expect(userInfo.amount).to.equal(stakeAmount);
-      expect(await stakingVault.totalStaked()).to.equal(stakeAmount);
+    it("3. stake(0) phải revert", async function () {
+      await expectRevert(
+        vault.connect(user1).stake(0),
+        "StakingVault: amount must be > 0"
+      );
     });
   });
 
   describe("Unstake", function () {
-    beforeEach(async function () {
-      await stakingVault.connect(user1).stake(ethers.parseEther("100"));
-    });
+    it("4. unstake thành công và token quay về user", async function () {
+      const stakeAmount = ethers.parseEther("100");
+      const unstakeAmount = ethers.parseEther("40");
 
-    it("5. unstake - phải lớn hơn 0", async function () {
-      await expectRevert(
-        stakingVault.connect(user1).unstake(0),
-        "StakingVault: amount must be > 0"
+      await stakeAsUser(stakeAmount);
+
+      const balanceBeforeUnstake = await token.balanceOf(user1.address);
+      await vault.connect(user1).unstake(unstakeAmount);
+
+      const balanceAfterUnstake = await token.balanceOf(user1.address);
+      const userInfo = await vault.userInfo(user1.address);
+
+      assert.strictEqual(balanceAfterUnstake - balanceBeforeUnstake, unstakeAmount);
+      assert.strictEqual(
+        await token.balanceOf(await vault.getAddress()),
+        stakeAmount - unstakeAmount
       );
+      assert.strictEqual(userInfo.amount, stakeAmount - unstakeAmount);
     });
 
-    it("6. unstake - không đủ số dư bị revert", async function () {
+    it("5. unstake vượt quá số đã stake phải revert", async function () {
+      await stakeAsUser(ethers.parseEther("50"));
+
       await expectRevert(
-        stakingVault.connect(user1).unstake(ethers.parseEther("200")),
+        vault.connect(user1).unstake(ethers.parseEther("60")),
         "StakingVault: insufficient stake"
       );
     });
-
-    it("7. unstake - rút token thành công", async function () {
-      const unstakeAmount = ethers.parseEther("50");
-      await stakingVault.connect(user1).unstake(unstakeAmount);
-
-      const userInfo = await stakingVault.userInfo(user1.address);
-      expect(userInfo.amount).to.equal(ethers.parseEther("50"));
-      expect(await stakingVault.totalStaked()).to.equal(ethers.parseEther("50"));
-    });
   });
 
-  describe("Claim Rewards (Airdrop Points)", function () {
-    beforeEach(async function () {
-      await stakingVault.connect(user1).stake(ethers.parseEther("100"));
+  describe("Rewards", function () {
+    it("6. pendingRewards(user) tăng sau khi tăng thời gian", async function () {
+      const amount = ethers.parseEther("100");
+      await stakeAsUser(amount);
+
+      const pendingBefore = await vault.pendingRewards(user1.address);
+      await networkHelpers.time.increase(3600);
+      const pendingAfter = await vault.pendingRewards(user1.address);
+
+      assert.strictEqual(pendingBefore, 0n);
+      assert.ok(pendingAfter > pendingBefore);
     });
 
-    it("8. claimRewards - cộng điểm airdrop thành công sau một thời gian", async function () {
-      // Tua nhanh thời gian thêm 10 giây
-      await ethers.provider.send("evm_increaseTime", [10]);
-      await ethers.provider.send("evm_mine", []);
+    it("7. claimRewards() phải ghi điểm sang AirdropPoints thật", async function () {
+      const amount = ethers.parseEther("100");
+      await stakeAsUser(amount);
+      await networkHelpers.time.increase(120);
 
-      // Gọi claimRewards
-      await stakingVault.connect(user1).claimRewards();
+      const pendingBeforeClaim = await vault.pendingRewards(user1.address);
+      await vault.connect(user1).claimRewards();
 
-      // Kiểm tra điểm airdrop của user1 có tăng lên không
-      const userInfo = await stakingVault.userInfo(user1.address);
-      expect(userInfo.unclaimedRewards).to.equal(0n);
-      
-      // Số điểm cụ thể phụ thuộc vào thời gian chính xác của block, nhưng chắc chắn phải > 0
-      const currentSnapshotId = await airdropPoints.currentSnapshotId();
-      const points = await airdropPoints.getPoints(user1.address, currentSnapshotId);
-      expect(points > 0n).to.be.true;
+      const recordedPoints = await airdropPoints.getCurrentPoints(user1.address);
+      const userInfo = await vault.userInfo(user1.address);
+
+      assert.ok(recordedPoints > 0n);
+      assert.ok(recordedPoints >= pendingBeforeClaim);
+      assert.strictEqual(await vault.pendingRewards(user1.address), 0n);
+      assert.strictEqual(userInfo.unclaimedRewards, 0n);
+    });
+
+    it("8. claimRewards() khi chưa có reward không cộng điểm", async function () {
+      await vault.connect(user1).claimRewards();
+
+      assert.strictEqual(await airdropPoints.getCurrentPoints(user1.address), 0n);
+      assert.strictEqual(await vault.pendingRewards(user1.address), 0n);
     });
   });
 
   describe("Emergency Withdraw", function () {
-    beforeEach(async function () {
-      await stakingVault.connect(user1).stake(ethers.parseEther("100"));
-    });
+    it("9. emergencyWithdraw() phải trả toàn bộ token và reset state reward", async function () {
+      const amount = ethers.parseEther("250");
+      await stakeAsUser(amount);
+      await networkHelpers.time.increase(600);
 
-    it("9. emergencyWithdraw - rút lại toàn bộ gốc ngay lập tức và bỏ thưởng", async function () {
-      await stakingVault.connect(user1).emergencyWithdraw();
+      assert.ok((await vault.pendingRewards(user1.address)) > 0n);
 
-      const userInfo = await stakingVault.userInfo(user1.address);
-      expect(userInfo.amount).to.equal(0n);
-      expect(await stakingVault.totalStaked()).to.equal(0n);
+      await vault.connect(user1).emergencyWithdraw();
 
-      // Số dư token LaunchToken của user1 phải phục hồi về 1000 như ban đầu
-      expect(await launchToken.balanceOf(user1.address)).to.equal(ethers.parseEther("1000"));
-    });
-  });
+      const userInfo = await vault.userInfo(user1.address);
 
-  describe("Pending Rewards", function () {
-    it("10. pendingRewards - trả về đúng số reward tích lũy", async function () {
-      await stakingVault.connect(user1).stake(ethers.parseEther("100"));
-
-      // Tua nhanh 10 giây
-      await ethers.provider.send("evm_increaseTime", [10]);
-      await ethers.provider.send("evm_mine", []);
-
-      const pending = await stakingVault.pendingRewards(user1.address);
-      expect(pending > 0n).to.be.true;
+      assert.strictEqual(await token.balanceOf(user1.address), initialUserBalance);
+      assert.strictEqual(await token.balanceOf(await vault.getAddress()), 0n);
+      assert.strictEqual(await vault.totalStaked(), 0n);
+      assert.strictEqual(userInfo.amount, 0n);
+      assert.strictEqual(userInfo.rewardDebt, 0n);
+      assert.strictEqual(userInfo.unclaimedRewards, 0n);
+      assert.strictEqual(await vault.pendingRewards(user1.address), 0n);
     });
   });
 });

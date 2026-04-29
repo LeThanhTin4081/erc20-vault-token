@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const bodyFont = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
 
-const displayFont = Plus_Jakarta_Sans({
+const BeVietNam = Be_Vietnam_Pro({
   subsets: ["latin"],
-  variable: "--font-display",
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-body",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
+      <body className={BeVietNam.variable}>
         <Providers>{children}</Providers>
       </body>
     </html>

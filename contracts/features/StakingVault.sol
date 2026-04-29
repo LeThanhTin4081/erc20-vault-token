@@ -41,27 +41,11 @@ contract StakingVault is ReentrancyGuard {
     uint256 public totalStaked;
     uint256 public lastRewardTime;
     uint256 public accRewardPerShare;
-
-    // EVENTS
-
     event Staked(address indexed user, uint256 amount);
     event Unstaked(address indexed user, uint256 amount);
     event RewardsClaimed(address indexed user, uint256 reward);
     event EmergencyWithdrawn(address indexed user, uint256 amount);
     event PoolUpdated(uint256 lastRewardTime, uint256 accRewardPerShare);
-
-    // MODIFIER
-
-    // Chặn hành động nếu hệ thống chưa launch (tradingOpen == false)
-    modifier onlyAfterLaunch() {
-        require(
-            ILaunchToken(address(stakingToken)).tradingOpen(),
-            "StakingVault: system not launched yet"
-        );
-        _;
-    }
-
-    // CONSTRUCTOR
 
     constructor(address _stakingToken, address _airdropPoints) {
         require(_stakingToken != address(0), "StakingVault: invalid staking token");
@@ -72,12 +56,7 @@ contract StakingVault is ReentrancyGuard {
         lastRewardTime = block.timestamp;
     }
 
-    // CORE FUNCTIONS
-
-    /**
-     * @dev Nạp token vào vault
-     */
-    function stake(uint256 amount) external nonReentrant onlyAfterLaunch {
+    function stake(uint256 amount) external nonReentrant {
         require(amount > 0, "StakingVault: amount must be > 0");
 
         updatePool();
@@ -94,9 +73,6 @@ contract StakingVault is ReentrancyGuard {
         emit Staked(msg.sender, amount);
     }
 
-    /**
-     * @dev Rút token khỏi vault
-     */
     function unstake(uint256 amount) external nonReentrant {
         require(amount > 0, "StakingVault: amount must be > 0");
 
@@ -115,9 +91,6 @@ contract StakingVault is ReentrancyGuard {
         emit Unstaked(msg.sender, amount);
     }
 
-    /**
-     * @dev Claim reward do staking token
-     */
     function claimRewards() external nonReentrant {
         updatePool();
 
@@ -136,9 +109,6 @@ contract StakingVault is ReentrancyGuard {
         emit RewardsClaimed(msg.sender, reward);
     }
 
-    /**
-     * @dev Cho phép rút tiền bất chấp phần thưởng, dùng khi khẩn cấp
-     */
     function emergencyWithdraw() external nonReentrant {
         updatePool();
 
@@ -155,8 +125,6 @@ contract StakingVault is ReentrancyGuard {
 
         emit EmergencyWithdrawn(msg.sender, amount);
     }
-
-    // VIEW & INTERNAL FUNCTIONS
 
     function pendingRewards(address account) external view returns (uint256) {
         UserInfo storage user = userInfo[account];
