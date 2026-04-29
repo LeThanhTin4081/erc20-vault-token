@@ -23,13 +23,13 @@ export function ActionButton({
   return (
     <button
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-violet-300/60 disabled:border-white/10 disabled:bg-white/[0.04] disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-white/[0.04]",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-violet-300/60 disabled:bg-white/[0.04] disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-white/[0.04]",
         variant === "primary" &&
-          "border-violet-300/50 bg-violet-950 text-violet-100 hover:border-violet-200/70 hover:bg-violet-900",
+          "bg-violet-950 text-violet-100 shadow-[0_0_22px_rgba(124,58,237,0.18)] hover:bg-violet-900",
         variant === "secondary" &&
-          "border-white/14 bg-white/[0.06] text-slate-100 hover:bg-white/[0.12]",
+          "bg-white/[0.06] text-slate-100 hover:bg-white/[0.12]",
         variant === "danger" &&
-          "border-rose-300/30 bg-rose-400 text-rose-950 hover:bg-rose-300",
+          "bg-rose-400 text-rose-950 hover:bg-rose-300",
         className,
       )}
       {...props}
@@ -56,13 +56,13 @@ export function Panel({
   return (
     <section
       className={cx(
-        "reveal-section soft-card rounded-xl border border-white/10 bg-[#101522]/88 p-5 backdrop-blur-md",
+        "reveal-section soft-card rounded-2xl bg-[#101522]/70 p-6 backdrop-blur-md ring-1 ring-white/[0.04]",
         className,
       )}
     >
       <div className="mb-5 flex items-start gap-3">
         {Icon ? (
-          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-violet-300/25 bg-violet-300/10 text-violet-200">
+          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-300/10 text-violet-200">
             <Icon aria-hidden className="h-5 w-5" />
           </span>
         ) : null}
@@ -94,23 +94,23 @@ export function StatCard({
   tone?: "violet" | "emerald" | "cyan" | "amber" | "rose";
 }) {
   const tones = {
-    violet: "border-violet-300/22 bg-violet-300/[0.08] text-violet-100",
-    emerald: "border-violet-300/22 bg-violet-300/[0.08] text-violet-100",
-    cyan: "border-violet-300/18 bg-violet-300/[0.06] text-violet-100",
-    amber: "border-amber-200/20 bg-amber-300/[0.06] text-amber-100",
-    rose: "border-rose-200/20 bg-rose-300/[0.06] text-rose-100",
+    violet: "bg-violet-300/[0.07] text-violet-100",
+    emerald: "bg-violet-300/[0.07] text-violet-100",
+    cyan: "bg-violet-300/[0.055] text-violet-100",
+    amber: "bg-amber-300/[0.055] text-amber-100",
+    rose: "bg-rose-300/[0.055] text-rose-100",
   };
 
   return (
     <div
       className={cx(
-        "min-w-0 rounded-lg border p-4 transition hover:-translate-y-0.5 hover:bg-white/[0.05]",
+        "min-w-0 rounded-xl p-4 transition hover:-translate-y-0.5 hover:bg-white/[0.055]",
         tones[tone],
       )}
     >
       <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
         {Icon ? (
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-black/20 text-violet-200">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-black/20 text-violet-200">
             <Icon aria-hidden className="h-3.5 w-3.5" />
           </span>
         ) : null}
