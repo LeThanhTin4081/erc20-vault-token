@@ -134,12 +134,12 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="block">
+    <label className="block">
       <span className="mb-2 block text-sm font-medium text-slate-200">
         {label}
       </span>
       {children}
-    </div>
+    </label>
   );
 }
 

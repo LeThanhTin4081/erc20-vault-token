@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-3a30c4ea7895815b1fc56606e8fc4a2712b40900",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.4.0"
+  },
+  "userSourceNameMap": {
+    "contracts/features/AirdropPoints.sol": "project/contracts/features/AirdropPoints.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/features/AirdropPoints.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\n/**\r\n * @title AirdropPoints\r\n * @dev Hợp đồng ghi nhận điểm (Point Accounting) cho Airdrop lúc Snapshot.\r\n * Sử dụng AccessManager chung để kiểm tra quyền (đúng kiến trúc hệ thống).\r\n */\r\n\r\n// Interface nhỏ để gọi hàm của AccessManager (check quyền)\r\ninterface IAccessManager {\r\n    function hasRole(bytes32 role, address account) external view returns (bool);\r\n}\r\n\r\ncontract AirdropPoints {\r\n\r\n    // STATE VARIABLES\r\n\r\n    /**\r\n     * @dev Mã băm (Hash) định danh cho quyền VAULT_ROLE.\r\n     * Chỉ những tài khoản/hợp đồng được cấp quyền này (như StakingVault) mới được gọi hàm addPoints().\r\n     */\r\n    bytes32 public constant VAULT_ROLE = keccak256(\"VAULT_ROLE\");\r\n\r\n    /**\r\n     * @dev Mã băm (Hash) định danh cho quyền ADMIN_ROLE.\r\n     * Chỉ admin mới được gọi hàm snapshot().\r\n     */\r\n    bytes32 public constant ADMIN_ROLE = keccak256(\"ADMIN_ROLE\");\r\n\r\n    /**\r\n     * @dev Địa chỉ AccessManager (hệ thống phân quyền tập trung).\r\n     */\r\n    IAccessManager public accessManager;\r\n\r\n    /**\r\n     * @dev ID của đợt Snapshot hiện hành.\r\n     * Mỗi khi chốt sổ, ID này sẽ tăng lên 1 để chuẩn bị cho đợt tiếp theo.\r\n     */\r\n    uint256 public currentSnapshotId;\r\n\r\n    /**\r\n     * @dev Bản đồ 2 lớp lưu trữ điểm của người dùng theo từng đợt (epoch).\r\n     * mapping(User Address => mapping(Snapshot ID => Số điểm))\r\n     */\r\n    mapping(address => mapping(uint256 => uint256)) private _points;\r\n\r\n    // EVENTS\r\n\r\n    /**\r\n     * @dev Sự kiện được phát ra (emit) mỗi khi có điểm được cộng thành công.\r\n     */\r\n    event PointsAdded(\r\n        address indexed user,\r\n        uint256 indexed snapshotId,\r\n        uint256 amount\r\n    );\r\n\r\n    /**\r\n     * @dev Sự kiện phát ra khi Admin tạo một mốc thời gian (snapshot) mới.\r\n     */\r\n    event SnapshotCreated(uint256 snapshotId);\r\n\r\n    // MODIFIERS\r\n\r\n    modifier onlyVault() {\r\n        require(\r\n            accessManager.hasRole(VAULT_ROLE, msg.sender),\r\n            \"AirdropPoints: caller is not vault\"\r\n        );\r\n        _;\r\n    }\r\n\r\n    modifier onlyAdmin() {\r\n        require(\r\n            accessManager.hasRole(ADMIN_ROLE, msg.sender),\r\n            \"AirdropPoints: caller is not admin\"\r\n        );\r\n        _;\r\n    }\r\n\r\n    // CONSTRUCTOR\r\n\r\n    /**\r\n     * @dev Hàm khởi tạo. Nhận địa chỉ AccessManager để kiểm tra quyền.\r\n     * @param _accessManager Địa chỉ của hợp đồng AccessManager\r\n     */\r\n    constructor(address _accessManager) {\r\n        accessManager = IAccessManager(_accessManager);\r\n    }\r\n\r\n    // CORE FUNCTIONS\r\n\r\n    /**\r\n     * @dev Thêm điểm cho người dùng (chỉ hợp đồng StakingVault mới được phép gọi).\r\n     * @param user Địa chỉ ví của người dùng.\r\n     * @param amount Số điểm được cộng thêm.\r\n     */\r\n    function addPoints(\r\n        address user,\r\n        uint256 amount\r\n    ) external onlyVault {\r\n        require(amount > 0, \"Amount must be > 0\");\r\n        _points[user][currentSnapshotId] += amount;\r\n        emit PointsAdded(user, currentSnapshotId, amount);\r\n    }\r\n\r\n    /**\r\n     * @dev Lưu mốc snapshot hiện hành và chuyển sang đợt mới.\r\n     * Chỉ người có ADMIN_ROLE mới được thực hiện.\r\n     * @return Trả về ID của mốc snapshot mới được tạo.\r\n     */\r\n    function snapshot()\r\n        external\r\n        onlyAdmin\r\n        returns (uint256)\r\n    {\r\n        currentSnapshotId++;\r\n        emit SnapshotCreated(currentSnapshotId);\r\n        return currentSnapshotId;\r\n    }\r\n\r\n    // VIEW FUNCTIONS\r\n\r\n    /**\r\n     * @dev Tra cứu điểm của một người dùng tại một đợt (snapshotId) cụ thể.\r\n     */\r\n    function getPoints(\r\n        address user,\r\n        uint256 snapshotId\r\n    ) external view returns (uint256) {\r\n        return _points[user][snapshotId];\r\n    }\r\n\r\n    /**\r\n     * @dev Tra cứu điểm của người dùng ở đợt hiện tại (chưa chốt sổ).\r\n     */\r\n    function getCurrentPoints(address user) external view returns (uint256) {\r\n        return _points[user][currentSnapshotId];\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

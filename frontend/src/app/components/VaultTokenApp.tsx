@@ -255,15 +255,15 @@ export default function VaultTokenApp({
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   const [showAppLoader, setShowAppLoader] = useState(isConsoleMode);
   const nearStars = useMemo(
-    () => makeStarLayer(50, 13, 2, 3, 9, 6, 1),
+    () => makeStarLayer(18, 13, 2, 3, 14, 6, 0.72),
     [],
   );
   const midStars = useMemo(
-    () => makeStarLayer(68, 27, 1, 3, 12, 7, 0.78),
+    () => makeStarLayer(28, 27, 1, 3, 18, 7, 0.56),
     [],
   );
   const farStars = useMemo(
-    () => makeStarLayer(92, 43, 1, 2, 16, 8, 0.62),
+    () => makeStarLayer(42, 43, 1, 2, 22, 8, 0.42),
     [],
   );
 
@@ -399,8 +399,8 @@ export default function VaultTokenApp({
     ],
     query: {
       enabled: isConsoleMode,
-      refetchInterval: isConsoleMode ? 5_000 : false,
-      staleTime: 2_500,
+      refetchInterval: isConsoleMode ? 8_000 : false,
+      staleTime: 4_000,
     },
   });
 
@@ -438,8 +438,8 @@ export default function VaultTokenApp({
         ],
     query: {
       enabled: isConsoleMode && Boolean(address) && selectedSnapshot !== null,
-      refetchInterval: isConsoleMode ? 5_000 : false,
-      staleTime: 2_500,
+      refetchInterval: isConsoleMode ? 8_000 : false,
+      staleTime: 4_000,
     },
   });
 
@@ -498,8 +498,8 @@ export default function VaultTokenApp({
     contracts: lockContracts,
     query: {
       enabled: isConsoleMode && Boolean(address) && lockReadCount > 0,
-      refetchInterval: isConsoleMode ? 5_000 : false,
-      staleTime: 2_500,
+      refetchInterval: isConsoleMode ? 8_000 : false,
+      staleTime: 4_000,
     },
   });
 
@@ -539,13 +539,11 @@ export default function VaultTokenApp({
   }, []);
 
   useEffect(() => {
-    if (!isConsoleMode) {
-      return;
-    }
+    if (!isConsoleMode) return;
 
     const timer = window.setTimeout(() => {
       setShowAppLoader(false);
-    }, 260);
+    }, 180);
 
     return () => window.clearTimeout(timer);
   }, [isConsoleMode]);
