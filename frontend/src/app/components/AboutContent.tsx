@@ -1,5 +1,6 @@
 import {
   Activity,
+  ClipboardList,
   Coins,
   Info,
   Layers3,
@@ -31,9 +32,8 @@ export function AboutContent() {
       </section>
 
       <Panel title="Thành Viên Nhóm" eyebrow="Team" icon={Users}>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["NAM", "Leader / AccessManager / LaunchToken"],
             ["TIN", "Treasury / TokenLocker"],
             ["HẬU", "StakingVault / kiến trúc hệ thống"],
             ["VINH", "AirdropPoints / snapshot flow"],
@@ -49,6 +49,8 @@ export function AboutContent() {
           ))}
         </div>
       </Panel>
+
+
 
       <Panel title="Tổng Quan Dự Án" eyebrow="VaultToken" icon={Info}>
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -77,14 +79,27 @@ export function AboutContent() {
               { label: "Token", value: <span className="inline-flex items-center gap-1.5">VaultToken <TokenUnit /></span> },
               { label: "Decimals", value: "18" },
               { label: "Contracts", value: "7 modules" },
-              { label: "Initial Supply", value: <TokenValue value="1,000,000" /> },
-              { label: "Max Supply", value: <TokenValue value="10,000,000" /> },
+              {
+                label: "Initial Supply",
+                value: <TokenValue value="1,000,000" />,
+                detail: "Lượng token được mint ban đầu khi deploy hệ thống.",
+              },
+              {
+                label: "Max Supply / Mint Cap",
+                value: <TokenValue value="10,000,000" />,
+                detail: "Tổng cung tối đa của VaultToken. LaunchToken không được mint vượt quá giới hạn này.",
+              },
               { label: "Stack", value: "Solidity, Hardhat, OpenZeppelin" },
               { label: "Frontend", value: "Next.js, Viem, Wagmi, MetaMask" },
             ].map((item) => (
               <div className="rounded-xl bg-violet-300/[0.055] px-4 py-3" key={item.label}>
                 <p className="text-xs uppercase text-slate-500">{item.label}</p>
                 <p className="mt-1 font-semibold text-violet-100">{item.value}</p>
+                {"detail" in item ? (
+                  <p className="mt-2 text-xs leading-5 text-slate-400">
+                    {item.detail}
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
@@ -275,6 +290,117 @@ export function AboutContent() {
           </div>
         </div>
       </Panel>
+      <Panel title="Phân Công Nhiệm Vụ" eyebrow="Tasks from MD" icon={ClipboardList}>
+        <div className="space-y-5">
+          <div className="grid gap-4 lg:grid-cols-2">
+            {[
+              {
+                name: "TIN",
+                title: "Fund & Locker Developer",
+                code: "Treasury.sol và TokenLocker.sol",
+                test: "2 file unit test cho Treasury và TokenLocker",
+                report: "Viết phần cơ sở lý thuyết ngắn gọn, bảng Tokenomics, khái niệm ERC-20 và Hardhat.",
+                tasks: [
+                  "Thiết kế Treasury như két token của hệ thống.",
+                  "Đảm bảo withdraw chỉ dành cho admin.",
+                  "Xử lý approveSpender để Distributor có thể nhận allowance.",
+                  "Xây dựng TokenLocker cho lock/unlock theo thời gian.",
+                  "Test các trường hợp không thể rút hoặc unlock sai điều kiện.",
+                ],
+              },
+              {
+                name: "HẬU",
+                title: "DeFi Logic Developer",
+                code: "StakingVault.sol",
+                test: "1 file unit test cho logic staking",
+                report: "Phân tích yêu cầu, thiết kế kiến trúc, vẽ UML, use-case, state machine và luồng chuyển tiền/nhận điểm.",
+                tasks: [
+                  "Xây dựng hàm stake và unstake.",
+                  "Cập nhật reward bằng mô hình accRewardPerToken.",
+                  "Kết nối StakingVault với AirdropPoints để cộng điểm.",
+                  "Xử lý claimRewards và emergencyWithdraw.",
+                  "Test logic cộng/trừ điểm và mock luồng tương tác.",
+                ],
+              },
+              {
+                name: "VINH",
+                title: "Point Accounting Developer",
+                code: "AirdropPoints.sol",
+                test: "1 file unit test cho điểm và snapshot",
+                report: "Trình bày luồng snapshot, cơ chế điểm on-chain, cấu trúc source code và các invariants.",
+                tasks: [
+                  "Thiết kế contract chỉ accounting điểm, không giữ token.",
+                  "Bảo vệ addPoints để chỉ VAULT_ROLE được gọi.",
+                  "Tạo snapshotId cho từng epoch airdrop.",
+                  "Cung cấp getPoints(user, snapshotId) cho Distributor.",
+                  "Test quyền addPoints và khả năng lưu điểm theo epoch.",
+                ],
+              },
+              {
+                name: "TRÌNH",
+                title: "Distributor & Tester Master",
+                code: "AirdropDistributor.sol",
+                test: "1 file unit test chống double claim",
+                report: "Viết phần ReentrancyGuard, kịch bản test, deploy Sepolia và chỉnh format báo cáo cuối.",
+                tasks: [
+                  "Xây dựng hàm claim token airdrop.",
+                  "Đọc điểm từ AirdropPoints theo snapshot.",
+                  "Kiểm tra claimed để chặn claim lặp.",
+                  "Tính reward và rút token từ Treasury qua transferFrom.",
+                  "Tổng hợp minh chứng test pass và nhật ký deploy Sepolia.",
+                ],
+              },
+            ].map((member) => (
+              <div
+                className="rounded-2xl bg-white/[0.035] p-5 ring-1 ring-white/[0.04]"
+                key={member.name}
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-violet-200">
+                      {member.name}
+                    </p>
+                    <h3 className="mt-1 text-lg font-bold text-white">
+                      {member.title}
+                    </h3>
+                  </div>
+                  <span className="rounded-full bg-violet-300/[0.08] px-3 py-1 text-xs font-semibold text-violet-100">
+                    {member.test}
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-black/20 p-4">
+                    <p className="text-xs uppercase text-slate-500">Code</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-200">
+                      {member.code}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-black/20 p-4">
+                    <p className="text-xs uppercase text-slate-500">Báo cáo</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-300">
+                      {member.report}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {member.tasks.map((task, index) => (
+                    <div
+                      className="flex gap-3 rounded-xl bg-violet-300/[0.045] p-3 text-sm leading-6 text-slate-300"
+                      key={task}
+                    >
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-950 text-xs font-semibold text-violet-100">
+                        {index + 1}
+                      </span>
+                      <span>{task}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Panel>
+
     </div>
   );
 }

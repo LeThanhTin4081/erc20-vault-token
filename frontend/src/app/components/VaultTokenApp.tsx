@@ -242,6 +242,7 @@ export default function VaultTokenApp({
 
   const appMode = initialMode;
   const activeView = initialView;
+  const isConsoleMode = appMode === "console";
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
   const [snapshotId, setSnapshotId] = useState("0");
@@ -252,7 +253,7 @@ export default function VaultTokenApp({
   const [pendingHash, setPendingHash] = useState<Hash>();
   const [pendingLabel, setPendingLabel] = useState("");
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
-  const [showAppLoader, setShowAppLoader] = useState(true);
+  const [showAppLoader, setShowAppLoader] = useState(isConsoleMode);
   const nearStars = useMemo(
     () => makeStarLayer(50, 13, 2, 3, 9, 6, 1),
     [],
@@ -397,7 +398,9 @@ export default function VaultTokenApp({
       },
     ],
     query: {
-      refetchInterval: 5_000,
+      enabled: isConsoleMode,
+      refetchInterval: isConsoleMode ? 5_000 : false,
+      staleTime: 2_500,
     },
   });
 
@@ -434,8 +437,9 @@ export default function VaultTokenApp({
           },
         ],
     query: {
-      enabled: Boolean(address) && selectedSnapshot !== null,
-      refetchInterval: 5_000,
+      enabled: isConsoleMode && Boolean(address) && selectedSnapshot !== null,
+      refetchInterval: isConsoleMode ? 5_000 : false,
+      staleTime: 2_500,
     },
   });
 
@@ -493,8 +497,9 @@ export default function VaultTokenApp({
     allowFailure: true,
     contracts: lockContracts,
     query: {
-      enabled: Boolean(address) && lockReadCount > 0,
-      refetchInterval: 5_000,
+      enabled: isConsoleMode && Boolean(address) && lockReadCount > 0,
+      refetchInterval: isConsoleMode ? 5_000 : false,
+      staleTime: 2_500,
     },
   });
 
@@ -534,12 +539,16 @@ export default function VaultTokenApp({
   }, []);
 
   useEffect(() => {
+    if (!isConsoleMode) {
+      return;
+    }
+
     const timer = window.setTimeout(() => {
       setShowAppLoader(false);
-    }, 720);
+    }, 260);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [isConsoleMode]);
 
   useEffect(() => {
     if (!isConfirmed || !pendingHash) return;
