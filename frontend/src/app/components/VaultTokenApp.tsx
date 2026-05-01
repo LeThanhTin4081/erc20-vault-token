@@ -45,7 +45,7 @@ import {
   airdropDistributorAbi,
   airdropPointsAbi,
   contractAddresses,
-  hardhatChain,
+  sepoliaChain,
   launchTokenAbi,
   roles,
   stakingVaultAbi,
@@ -238,7 +238,7 @@ export default function VaultTokenApp({
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const account = address ?? zeroAddress;
-  const isWrongNetwork = isConnected && chainId !== hardhatChain.id;
+  const isWrongNetwork = isConnected && chainId !== sepoliaChain.id;
 
   const appMode = initialMode;
   const activeView = initialView;
@@ -289,111 +289,111 @@ export default function VaultTokenApp({
         abi: launchTokenAbi,
         functionName: "balanceOf",
         args: [account],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "totalSupply",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "tradingOpen",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "burnRate",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.stakingVault,
         abi: stakingVaultAbi,
         functionName: "totalStaked",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.stakingVault,
         abi: stakingVaultAbi,
         functionName: "pendingRewards",
         args: [account],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.stakingVault,
         abi: stakingVaultAbi,
         functionName: "userInfo",
         args: [account],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.airdropPoints,
         abi: airdropPointsAbi,
         functionName: "getCurrentPoints",
         args: [account],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.airdropPoints,
         abi: airdropPointsAbi,
         functionName: "currentSnapshotId",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.tokenLocker,
         abi: tokenLockerAbi,
         functionName: "getLockCount",
         args: [account],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "allowance",
         args: [account, contractAddresses.stakingVault],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "allowance",
         args: [account, contractAddresses.tokenLocker],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.accessManager,
         abi: accessManagerAbi,
         functionName: "hasRole",
         args: [roles.admin, account],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.treasury,
         abi: treasuryAbi,
         functionName: "getBalance",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "paused",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.stakingVault,
         abi: stakingVaultAbi,
         functionName: "rewardRate",
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
       {
         address: contractAddresses.launchToken,
         abi: launchTokenAbi,
         functionName: "allowance",
         args: [contractAddresses.treasury, contractAddresses.airdropDistributor],
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       },
     ],
     query: {
@@ -416,21 +416,21 @@ export default function VaultTokenApp({
             abi: airdropDistributorAbi,
             functionName: "calculateReward",
             args: [account, selectedSnapshot],
-            chainId: hardhatChain.id,
+            chainId: sepoliaChain.id,
           },
           {
             address: contractAddresses.airdropDistributor,
             abi: airdropDistributorAbi,
             functionName: "claimed",
             args: [selectedSnapshot, account],
-            chainId: hardhatChain.id,
+            chainId: sepoliaChain.id,
           },
           {
             address: contractAddresses.airdropPoints,
             abi: airdropPointsAbi,
             functionName: "getPoints",
             args: [account, selectedSnapshot],
-            chainId: hardhatChain.id,
+            chainId: sepoliaChain.id,
           },
         ],
     query: {
@@ -481,7 +481,7 @@ export default function VaultTokenApp({
         abi: tokenLockerAbi,
         functionName: "getLockInfo",
         args: [account, BigInt(id)] as const,
-        chainId: hardhatChain.id,
+        chainId: sepoliaChain.id,
       })),
     [account, lockReadCount],
   );
@@ -569,7 +569,7 @@ export default function VaultTokenApp({
     }
 
     if (isWrongNetwork) {
-      setNotice("Switch MetaMask to local network.");
+      setNotice("Switch MetaMask to Sepolia network.");
       return;
     }
 
@@ -597,7 +597,7 @@ export default function VaultTokenApp({
     return (
       <div className="space-y-5">
         <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-          <Panel title="Protocol Snapshot" eyebrow="Local deployment" icon={BarChart3}>
+          <Panel title="Protocol Snapshot" eyebrow="Sepolia deployment" icon={BarChart3}>
             <div className="grid gap-4 sm:grid-cols-2">
               <StatCard
                 label="Wallet Balance"

@@ -4,12 +4,17 @@ import fs from "fs";
 import path from "path";
 
 async function main() {
+    // Khởi tạo Ethers theo cấu hình đặc thù của dự án
+    const connection = await hre.network.connect();
+    const ethers = connection.ethers;
+
     // Lấy signers từ Hardhat theo quy ước:
     // #0 = Admin/Deployer, #1 = User test, #2 = PublicSaleWallet, #3 = SeedWallet, #4 = ReserveWallet
     // Đọc địa chỉ từ file JSON được tạo ra tự động bởi Hardhat Ignition
-    const addressesPath = path.join(process.cwd(), "ignition/deployments/chain-31337/deployed_addresses.json");
+    const { chainId } = await ethers.provider.getNetwork();
+    const addressesPath = path.join(process.cwd(), `ignition/deployments/chain-${chainId}/deployed_addresses.json`);
     if (!fs.existsSync(addressesPath)) {
-        throw new Error("Không tìm thấy file deployed_addresses.json. Vui lòng chạy lệnh deploy Local trước!");
+        throw new Error(`Không tìm thấy file deployed_addresses.json tại ${addressesPath}. Vui lòng chạy lệnh deploy trước!`);
     }
     
     const addresses = JSON.parse(fs.readFileSync(addressesPath, "utf8"));
@@ -21,17 +26,31 @@ async function main() {
     const lockerAddr = addresses["DeploySystemModule#TokenLocker"];
     
     console.log("Bắt đầu cấu hình Admin Setup (Bước 3)...\n");
-    
-    // Khởi tạo Ethers theo cấu hình đặc thù của dự án
-    const connection = await hre.network.connect();
-    const ethers = connection.ethers;
 
-    const [admin, user1, publicSaleWallet, seedWallet, reserveWallet] = await ethers.getSigners();
-    console.log("Admin wallet       :", admin.address);
-    console.log("PublicSaleWallet   :", publicSaleWallet.address);
-    console.log("SeedWallet         :", seedWallet.address);
-    console.log("ReserveWallet      :", reserveWallet.address);
-    console.log("");
+    const signers = await ethers.getSigners();
+    const admin = signers[0];
+    
+    // Hàm hỗ trợ lấy địa chỉ ví từ .env, nếu không có thì tự tạo ví ảo
+    function getWalletAddress(envKey: string, name: string, index: number) {
+        if (process.env[envKey]) {
+            console.log(`\n✅ Đã tìm thấy ví [${name}] trong .env: ${process.env[envKey]}`);
+            return { address: process.env[envKey] };
+        }
+        
+        if (signers.length > index) return signers[index];
+        
+        const randomWallet = ethers.Wallet.createRandom();
+        console.log(`\n KHÔNG CÓ TRONG .ENV - TẠO VÍ ẢO CHO [${name}]:`);
+        console.log(`   - Address     : ${randomWallet.address}`);
+        console.log(`   - Private Key : ${randomWallet.privateKey}`);
+        return randomWallet;
+    }
+
+    const publicSaleWallet = getWalletAddress("PUBLIC_SALE_ADDRESS", "Public Sale", 2);
+    const seedWallet = getWalletAddress("SEED_ADDRESS", "Seed", 3);
+    const reserveWallet = getWalletAddress("RESERVE_ADDRESS", "Reserve", 4);
+
+    console.log("\nAdmin wallet       :", admin.address);
     
     // Kết nối vào các Contract
     const launchToken = await ethers.getContractAt("LaunchToken", launchTokenAddr);
@@ -98,7 +117,7 @@ async function main() {
     await tx.wait();
     console.log("  ✅ Đã chuyển 100,000 VLT -> ReserveWallet (Account #4) :", reserveWallet.address);
 
-    console.log("\n📊 Phân bổ Tokenomics sau setup:");
+    console.log("\n Phân bổ Tokenomics sau setup:");
     console.log("  Treasury contract    : 200,000 VLT (Airdrop/Community)");
     console.log("  TokenLocker contract : 300,000 VLT (Team/Dev - khóa 180 ngày)");
     console.log("  PublicSaleWallet     : 200,000 VLT (Account #2)");
@@ -106,7 +125,7 @@ async function main() {
     console.log("  ReserveWallet        : 100,000 VLT (Account #4)");
     console.log("  Tổng:                  1,000,000 VLT ✅");
 
-    console.log("\n🎉 HOÀN TẤT SETUP ADMIN! HỆ THỐNG ĐÃ SẴN SÀNG 100% CHO USER VÀ FRONTEND!");
+    console.log("\nHOÀN TẤT SETUP ADMIN! HỆ THỐNG ĐÃ SẴN SÀNG 100% CHO USER VÀ FRONTEND!");
 }
 
 main().catch((error) => {

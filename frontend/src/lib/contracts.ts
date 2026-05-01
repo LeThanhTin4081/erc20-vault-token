@@ -1,34 +1,22 @@
-import { defineChain, keccak256, parseAbi, stringToBytes } from "viem";
+import { keccak256, parseAbi, stringToBytes } from "viem";
+import { sepolia } from "viem/chains";
 import type { Address } from "viem";
 
-export const hardhatChain = defineChain({
-  id: 31337,
-  name: "Hardhat Local",
-  nativeCurrency: {
-    decimals: 18,
-    name: "Ether",
-    symbol: "ETH",
-  },
-  rpcUrls: {
-    default: {
-      http: ["http://127.0.0.1:8545"],
-    },
-  },
-});
-
 export const contractAddresses = {
-  accessManager: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  airdropPoints: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  launchToken: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  stakingVault: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  tokenLocker: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
-  treasury: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-  airdropDistributor: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+  accessManager: "0xcc1717D9aF0bED1EB82a8A40F4F1B23e04c13995",
+  airdropPoints: "0xa6d5924f0A5e505aaCA0a650336c190144989256",
+  launchToken: "0x8Ef6924aABCAa859F60F9eB69131D82ecB6E518d",
+  stakingVault: "0x6f610989c433faD35087D0F315710E87E587937e",
+  tokenLocker: "0x92F0db39b18297892d376B843aACE476d32a04E3",
+  treasury: "0xd6d7e7b9fA173C8E89ff3c76CcbEFA16A80CC756",
+  airdropDistributor: "0x0Ef3dC869186286d54242A4fABE854536a99eb3a",
 } as const satisfies Record<string, Address>;
 
 export const roles = {
   admin: keccak256(stringToBytes("ADMIN_ROLE")),
 } as const;
+
+export const sepoliaChain = sepolia;
 
 export const launchTokenAbi = parseAbi([
   "function name() view returns (string)",

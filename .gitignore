@@ -12,7 +12,7 @@ typechain-types/
 dist/
 
 # Hardhat Ignition local deployments
-ignition/deployments/chain-*/
+# ignition/deployments/chain-31337/
 
 # Logs
 *.log
