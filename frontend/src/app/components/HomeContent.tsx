@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Activity,
   Archive,
   BarChart3,
   Coins,
@@ -8,7 +9,6 @@ import {
   Lock,
   ShieldCheck,
   Sparkles,
-  TerminalSquare,
   Vault,
 } from "lucide-react";
 import { Panel, StatCard } from "./ui";
@@ -38,7 +38,6 @@ export function HomeContent() {
         id="home-top"
         className="relative z-10 flex min-h-[78vh] flex-col items-center justify-center overflow-hidden py-16 text-center"
       >
-        <div className="hero-purple-flow" aria-hidden />
         <div className="light-vortex" aria-hidden>
           <span className="light-vortex__ring light-vortex__ring--outer" />
           <span className="light-vortex__ring light-vortex__ring--inner" />
@@ -68,7 +67,7 @@ export function HomeContent() {
             href="/console"
             className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-violet-900/90 bg-transparent px-7 py-3 text-sm font-semibold text-violet-100 transition hover:border-violet-300/70 hover:bg-violet-950/30"
           >
-            <TerminalSquare aria-hidden className="h-4 w-4" />
+            <Activity aria-hidden className="h-4 w-4" />
             Open Console
           </Link>
         </div>
