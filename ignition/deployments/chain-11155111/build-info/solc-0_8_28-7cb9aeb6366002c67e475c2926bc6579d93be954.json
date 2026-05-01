@@ -1,0 +1,54 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-7cb9aeb6366002c67e475c2926bc6579d93be954",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.4.0"
+  },
+  "userSourceNameMap": {
+    "contracts/fund/Treasury.sol": "project/contracts/fund/Treasury.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": [
+        "project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.6.1/"
+      ]
+    },
+    "sources": {
+      "npm/@openzeppelin/contracts@5.6.1/token/ERC20/IERC20.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.4.0) (token/ERC20/IERC20.sol)\n\npragma solidity >=0.4.16;\n\n/**\n * @dev Interface of the ERC-20 standard as defined in the ERC.\n */\ninterface IERC20 {\n    /**\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\n     * another (`to`).\n     *\n     * Note that `value` may be zero.\n     */\n    event Transfer(address indexed from, address indexed to, uint256 value);\n\n    /**\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\n     * a call to {approve}. `value` is the new allowance.\n     */\n    event Approval(address indexed owner, address indexed spender, uint256 value);\n\n    /**\n     * @dev Returns the value of tokens in existence.\n     */\n    function totalSupply() external view returns (uint256);\n\n    /**\n     * @dev Returns the value of tokens owned by `account`.\n     */\n    function balanceOf(address account) external view returns (uint256);\n\n    /**\n     * @dev Moves a `value` amount of tokens from the caller's account to `to`.\n     *\n     * Returns a boolean value indicating whether the operation succeeded.\n     *\n     * Emits a {Transfer} event.\n     */\n    function transfer(address to, uint256 value) external returns (bool);\n\n    /**\n     * @dev Returns the remaining number of tokens that `spender` will be\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\n     * zero by default.\n     *\n     * This value changes when {approve} or {transferFrom} are called.\n     */\n    function allowance(address owner, address spender) external view returns (uint256);\n\n    /**\n     * @dev Sets a `value` amount of tokens as the allowance of `spender` over the\n     * caller's tokens.\n     *\n     * Returns a boolean value indicating whether the operation succeeded.\n     *\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\n     * that someone may use both the old and the new allowance by unfortunate\n     * transaction ordering. One possible solution to mitigate this race\n     * condition is to first reduce the spender's allowance to 0 and set the\n     * desired value afterwards:\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\n     *\n     * Emits an {Approval} event.\n     */\n    function approve(address spender, uint256 value) external returns (bool);\n\n    /**\n     * @dev Moves a `value` amount of tokens from `from` to `to` using the\n     * allowance mechanism. `value` is then deducted from the caller's\n     * allowance.\n     *\n     * Returns a boolean value indicating whether the operation succeeded.\n     *\n     * Emits a {Transfer} event.\n     */\n    function transferFrom(address from, address to, uint256 value) external returns (bool);\n}\n"
+      },
+      "project/contracts/fund/Treasury.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\n// Import interface ERC-20 chuẩn từ OpenZeppelin\r\nimport \"@openzeppelin/contracts/token/ERC20/IERC20.sol\";\r\n\r\n/**\r\n * @title Treasury\r\n * @dev Két tiền quản lý quỹ token của hệ thống.\r\n * Chứa 20% token cộng đồng để phân phối airdrop.\r\n * Cung cấp API để approve cho các hợp đồng phân phối (Distributor).\r\n * KHÔNG chứa logic airdrop hay staking — chỉ giữ tiền và cấp quyền rút.\r\n */\r\n\r\n// Interface nhỏ để gọi hàm của AccessManager (check quyền)\r\ninterface IAccessManager {\r\n    function hasRole(bytes32 role, address account) external view returns (bool);\r\n}\r\n\r\ncontract Treasury {\r\n\r\n    // STATE VARIABLES\r\n\r\n    // Địa chỉ token ERC-20 (LaunchToken)\r\n    IERC20 public token;\r\n\r\n    // Địa chỉ AccessManager (để check quyền admin)\r\n    IAccessManager public accessManager;\r\n\r\n    // Constant: role admin (phải giống hệt khai báo trong AccessManager.sol)\r\n    bytes32 public constant ADMIN_ROLE = keccak256(\"ADMIN_ROLE\");\r\n\r\n    // EVENTS\r\n\r\n    // Khi ai đó nạp token vào Treasury\r\n    event Deposited(address indexed from, uint256 amount);\r\n\r\n    // Khi admin rút token ra khỏi Treasury\r\n    event Withdrawn(address indexed to, uint256 amount);\r\n\r\n    // Khi admin cấp allowance cho 1 contract được rút token\r\n    event SpenderApproved(address indexed spender, uint256 amount);\r\n\r\n    // MODIFIER\r\n\r\n    // Chỉ cho phép tài khoản có ADMIN_ROLE gọi hàm\r\n    // Gọi sang AccessManager để kiểm tra\r\n    modifier onlyAdmin() {\r\n        require(\r\n            accessManager.hasRole(ADMIN_ROLE, msg.sender),\r\n            \"Treasury: caller is not admin\"\r\n        );\r\n        _;\r\n    }\r\n\r\n    // CONSTRUCTOR\r\n\r\n    /**\r\n     * @dev Khởi tạo contract, lưu địa chỉ token và accessManager\r\n     * @param _token Địa chỉ của LaunchToken (ERC-20)\r\n     * @param _accessManager Địa chỉ của AccessManager (RBAC)\r\n     */\r\n    constructor(address _token, address _accessManager) {\r\n        token = IERC20(_token);\r\n        accessManager = IAccessManager(_accessManager);\r\n    }\r\n\r\n    // FUNCTIONS\r\n\r\n    /**\r\n     * @dev Nạp token vào Treasury (ai cũng gọi được)\r\n     * @param amount Số token muốn nạp\r\n     *\r\n     * User phải gọi token.approve(addressTreasury, amount) TRƯỚC khi gọi deposit()\r\n     */\r\n    function deposit(uint256 amount) external {\r\n        // Không cho nạp 0 token\r\n        require(amount > 0, \"Treasury: amount must be > 0\");\r\n\r\n        // Chuyển token từ ví người gọi → Treasury\r\n        // Nếu chưa approve đủ → tự revert\r\n        token.transferFrom(msg.sender, address(this), amount);\r\n\r\n        // Phát event ghi nhật ký\r\n        emit Deposited(msg.sender, amount);\r\n    }\r\n\r\n    /**\r\n     * @dev Rút token ra khỏi Treasury (CHỈ ADMIN)\r\n     * @param to Địa chỉ nhận token\r\n     * @param amount Số token muốn rút\r\n     *\r\n     * Theo README mục 2.6: \"withdraw chỉ dành cho admin\"\r\n     * Theo ke_hoach mục 4: \"Tổng reward claim không được vượt quá số dư Treasury\"\r\n     */\r\n    function withdraw(address to, uint256 amount) external onlyAdmin {\r\n        // Không cho rút 0 token\r\n        require(amount > 0, \"Treasury: amount must be > 0\");\r\n\r\n        // Không cho rút tới địa chỉ 0 (đốt token vô tình)\r\n        require(to != address(0), \"Treasury: cannot withdraw to zero address\");\r\n\r\n        // Kiểm tra Treasury có đủ token không\r\n        // Tránh trường hợp rút quá số dư → revert không rõ lý do\r\n        require(token.balanceOf(address(this)) >= amount, \"Treasury: insufficient balance\");\r\n\r\n        // Chuyển token từ Treasury → địa chỉ nhận\r\n        token.transfer(to, amount);\r\n\r\n        // Phát event\r\n        emit Withdrawn(to, amount);\r\n    }\r\n\r\n    /**\r\n     * @dev Cấp allowance cho contract Distributor được rút token từ Treasury (CHỈ ADMIN)\r\n     * @param spender Địa chỉ contract được phép rút (thường là AirdropDistributor)\r\n     * @param amount Số token tối đa được rút\r\n     *\r\n     * Theo README mục 6: \"Race condition khi approve → reset về 0 trước\"\r\n     * Giải thích: Nếu allowance hiện tại = 500, admin muốn đổi thành 300,\r\n     * hacker có thể lợi dụng khoảnh khắc giữa 2 giao dịch để rút 500 + 300 = 800.\r\n     * Cách xử lý: reset về 0 trước → rồi mới set giá trị mới.\r\n     */\r\n    function approveSpender(address spender, uint256 amount) external onlyAdmin {\r\n        // Không cho approve cho địa chỉ 0\r\n        require(spender != address(0), \"Treasury: cannot approve zero address\");\r\n\r\n        // XỬ LÝ RACE CONDITION\r\n        // Bước 1: Kiểm tra allowance hiện tại\r\n        uint256 currentAllowance = token.allowance(address(this), spender);\r\n\r\n        // Bước 2: Nếu allowance hiện tại > 0, reset về 0 trước\r\n        // Điều này ngăn hacker rút cả giá trị cũ lẫn giá trị mới\r\n        if (currentAllowance > 0) {\r\n            token.approve(spender, 0);\r\n        }\r\n\r\n        // Bước 3: Set allowance mới\r\n        token.approve(spender, amount);\r\n\r\n        // Phát event\r\n        emit SpenderApproved(spender, amount);\r\n    }\r\n\r\n    // VIEW FUNCTIONS\r\n\r\n    /**\r\n     * @dev Xem số dư token hiện tại trong Treasury\r\n     * @return Số token đang giữ trong contract\r\n     */\r\n    function getBalance() external view returns (uint256) {\r\n        return token.balanceOf(address(this));\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

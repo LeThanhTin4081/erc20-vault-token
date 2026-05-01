@@ -1,0 +1,9 @@
+{
+  "DeploySystemModule#AccessManager": "0xcc1717D9aF0bED1EB82a8A40F4F1B23e04c13995",
+  "DeploySystemModule#AirdropPoints": "0xa6d5924f0A5e505aaCA0a650336c190144989256",
+  "DeploySystemModule#LaunchToken": "0x8Ef6924aABCAa859F60F9eB69131D82ecB6E518d",
+  "DeploySystemModule#StakingVault": "0x6f610989c433faD35087D0F315710E87E587937e",
+  "DeploySystemModule#TokenLocker": "0x92F0db39b18297892d376B843aACE476d32a04E3",
+  "DeploySystemModule#Treasury": "0xd6d7e7b9fA173C8E89ff3c76CcbEFA16A80CC756",
+  "DeploySystemModule#AirdropDistributor": "0x0Ef3dC869186286d54242A4fABE854536a99eb3a"
+}
