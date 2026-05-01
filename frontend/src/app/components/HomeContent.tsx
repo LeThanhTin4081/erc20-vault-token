@@ -89,11 +89,12 @@ export function HomeContent() {
               />
             ))}
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: "Symbol", value: <TokenUnit /> },
               { label: "Decimals", value: "18" },
-              { label: "Cap", value: "10,000,000" },
+              { label: "Cap", value: "1,000,000" },
+              { label: "Max Cap", value: "10,000,000" },
             ].map((item) => (
               <div className="rounded-xl bg-black/20 px-4 py-3" key={item.label}>
                 <p className="text-xs uppercase text-slate-500">{item.label}</p>
