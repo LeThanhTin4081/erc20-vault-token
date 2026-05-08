@@ -15,6 +15,7 @@ export function ActionButton({
   className,
   icon: Icon,
   variant = "primary",
+  disabled,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: LucideIcon;
@@ -22,6 +23,7 @@ export function ActionButton({
 }) {
   return (
     <button
+      disabled={disabled ?? false}
       className={cx(
         "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-violet-300/60 disabled:bg-white/[0.04] disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-white/[0.04]",
         variant === "primary" &&

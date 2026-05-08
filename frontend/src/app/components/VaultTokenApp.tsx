@@ -965,7 +965,7 @@ export default function VaultTokenApp({
               No locks for this wallet.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
               {locks.map((lock) => {
                 const remaining = secondsUntil(lock.unlockTime, now);
                 const ready = remaining === 0 && !lock.isReleased;
