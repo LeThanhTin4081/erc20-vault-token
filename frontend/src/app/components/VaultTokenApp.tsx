@@ -64,7 +64,7 @@ import { AppBackdrop, AppLoader } from "./AppBackdrop";
 import { HomeContent } from "./HomeContent";
 import { TokenValue } from "./token-display";
 import { TopBar } from "./TopBar";
-import type { AppMode, StarPoint, ViewId } from "./types";
+import type { AppMode, ViewId } from "./types";
 
 type ReadEntry = {
   status?: string;
@@ -200,33 +200,6 @@ function formatDuration(totalSeconds: number) {
   return `${minutes}m`;
 }
 
-function makeStarLayer(
-  total: number,
-  seed: number,
-  sizeBase: number,
-  sizeVariance: number,
-  durationBase: number,
-  durationVariance: number,
-  pullFactor: number,
-) {
-  const stars: StarPoint[] = [];
-  for (let i = 0; i < total; i += 1) {
-    const left = (seed + i * 41) % 100;
-    const top = (seed * 2 + i * 67) % 100;
-    const size = sizeBase + (i % sizeVariance);
-    const duration = durationBase + (i % durationVariance);
-    stars.push({
-      left,
-      top,
-      size,
-      delay: (i % 13) * 0.35,
-      duration,
-      dx: (50 - left) * pullFactor,
-      dy: (50 - top) * pullFactor,
-    });
-  }
-  return stars;
-}
 
 export default function VaultTokenApp({
   initialMode = "home",
@@ -254,18 +227,7 @@ export default function VaultTokenApp({
   const [pendingLabel, setPendingLabel] = useState("");
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   const [showAppLoader, setShowAppLoader] = useState(isConsoleMode);
-  const nearStars = useMemo(
-    () => makeStarLayer(18, 13, 2, 3, 14, 6, 0.72),
-    [],
-  );
-  const midStars = useMemo(
-    () => makeStarLayer(28, 27, 1, 3, 18, 7, 0.56),
-    [],
-  );
-  const farStars = useMemo(
-    () => makeStarLayer(42, 43, 1, 2, 22, 8, 0.42),
-    [],
-  );
+
 
   const { writeContractAsync, isPending: isWalletPending } = useWriteContract();
   const {
@@ -1274,7 +1236,7 @@ export default function VaultTokenApp({
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-black text-slate-100">
-      <AppBackdrop farStars={farStars} midStars={midStars} nearStars={nearStars} />
+      <AppBackdrop />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <TopBar />
