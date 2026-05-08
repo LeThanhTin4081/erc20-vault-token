@@ -5,7 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 interface IAirdropPoints {
-    function getPoints(address user, uint256 snapshotId) external view returns (uint256);
+    function getPoints(
+        address user,
+        uint256 snapshotId
+    ) external view returns (uint256);
 }
 
 interface ITreasury {
@@ -18,7 +21,6 @@ interface ITreasury {
  * Khớp điểm của AirdropPoints, và rút tiền từ quỹ allowance của Treasury.
  */
 contract AirdropDistributor is ReentrancyGuard {
-    
     // STATE VARIABLES
 
     IAirdropPoints public airdropPoints;
@@ -54,7 +56,10 @@ contract AirdropDistributor is ReentrancyGuard {
      */
     function claim(uint256 snapshotId) external nonReentrant {
         // 1. Kiểm tra claimed[snapshotId][msg.sender] == false
-        require(!claimed[snapshotId][msg.sender], "AirdropDistributor: already claimed");
+        require(
+            !claimed[snapshotId][msg.sender],
+            "AirdropDistributor: already claimed"
+        );
 
         // 2. Tính toán tiền theo điểm từ AirdropPoints (getPoints)
         uint256 amount = calculateReward(msg.sender, snapshotId);
@@ -78,7 +83,10 @@ contract AirdropDistributor is ReentrancyGuard {
     /**
      * @dev Hàm xem trước số tiền User sẽ nhận được nếu claim
      */
-    function calculateReward(address user, uint256 snapshotId) public view returns (uint256) {
+    function calculateReward(
+        address user,
+        uint256 snapshotId
+    ) public view returns (uint256) {
         // Công thức quy đổi Point -> Token
         uint256 points = airdropPoints.getPoints(user, snapshotId);
         return points * rewardPerPoint;
