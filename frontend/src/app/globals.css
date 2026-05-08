@@ -1,0 +1,446 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05060f;
+  --foreground: #f3f5ff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body), "Fira Code", "Segoe UI", monospace;
+  --font-mono: var(--font-body), "Fira Code", "SFMono-Regular", monospace;
+}
+
+html {
+  background: var(--background);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), "Fira Code", "Segoe UI", monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-body), "Fira Code", "Segoe UI", monospace;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+[data-rk] button[type="button"] {
+  background: #2e1065 !important;
+  border: 1px solid rgba(196, 181, 253, 0.48) !important;
+  color: #ede9fe !important;
+  box-shadow: 0 0 22px rgba(109, 40, 217, 0.22) !important;
+}
+
+[data-rk] button[type="button"]:hover {
+  background: #3b0764 !important;
+  border-color: rgba(221, 214, 254, 0.72) !important;
+}
+
+::selection {
+  background: #7c61ff;
+  color: #ffffff;
+}
+
+.hero-cta-glow {
+  animation: cta-violet-breathe 2.8s ease-in-out infinite;
+}
+
+.app-loader {
+  animation: app-loader-fade 0.72s ease forwards;
+}
+
+.app-loader__orb {
+  width: 68px;
+  height: 68px;
+  border-radius: 9999px;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  background:
+    radial-gradient(circle, rgba(221, 214, 254, 0.18), transparent 42%),
+    conic-gradient(
+      from 0deg,
+      transparent,
+      rgba(167, 139, 250, 0.8),
+      transparent 38%
+    );
+  box-shadow:
+    0 0 28px rgba(124, 58, 237, 0.35),
+    inset 0 0 22px rgba(196, 181, 253, 0.12);
+  animation: app-loader-spin 1.4s linear infinite, app-loader-breathe 1.8s ease-in-out infinite;
+}
+
+
+
+@keyframes app-loader-fade {
+  0% {
+    opacity: 0;
+  }
+  18%,
+  76% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes app-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes app-loader-breathe {
+  0%,
+  100% {
+    filter: brightness(0.82);
+  }
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes cta-violet-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(124, 58, 237, 0.24),
+      0 0 22px rgba(167, 139, 250, 0.12);
+    filter: brightness(0.92);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(167, 139, 250, 0.42),
+      0 0 36px rgba(124, 58, 237, 0.28);
+    filter: brightness(1.12);
+  }
+}
+
+.light-vortex {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  z-index: 1;
+  width: clamp(320px, 46vw, 620px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0.58;
+  filter: saturate(1.05);
+}
+
+.light-vortex__ring,
+.light-vortex__stream,
+.light-vortex__halo,
+.light-vortex__core {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+}
+
+.light-vortex__ring,
+.light-vortex__stream,
+.light-vortex__halo {
+  mix-blend-mode: screen;
+}
+
+.light-vortex__halo {
+  inset: -10%;
+  background:
+    radial-gradient(
+      ellipse at 45% 48%,
+      rgba(139, 92, 246, 0.24) 0%,
+      rgba(109, 40, 217, 0.16) 28%,
+      rgba(46, 16, 101, 0.08) 54%,
+      transparent 78%
+    ),
+    radial-gradient(
+      ellipse at 62% 42%,
+      rgba(76, 29, 149, 0.16) 0%,
+      rgba(91, 33, 182, 0.08) 34%,
+      transparent 66%
+    );
+  filter: blur(34px);
+  animation: light-vortex-breathe 10s ease-in-out infinite;
+}
+
+.light-vortex__ring--outer {
+  inset: 8%;
+  border: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 0 30%, rgba(124, 58, 237, 0.11) 48%, transparent 72%),
+    conic-gradient(
+      from 120deg,
+      transparent 0deg,
+      rgba(76, 29, 149, 0.1) 34deg,
+      rgba(139, 92, 246, 0.18) 76deg,
+      transparent 118deg,
+      rgba(91, 33, 182, 0.12) 190deg,
+      transparent 254deg,
+      rgba(124, 58, 237, 0.11) 314deg,
+      transparent 360deg
+    );
+  filter: blur(30px);
+  transform-origin: 50% 50%;
+  animation: light-vortex-spin 28s linear infinite;
+}
+
+.light-vortex__ring--inner {
+  inset: 24%;
+  border: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 0 24%, rgba(109, 40, 217, 0.14) 44%, transparent 68%),
+    conic-gradient(
+      from 20deg,
+      transparent,
+      rgba(124, 58, 237, 0.16),
+      rgba(76, 29, 149, 0.1),
+      transparent 54%
+    );
+  filter: blur(22px);
+  animation: light-vortex-spin-reverse 24s linear infinite;
+}
+
+.light-vortex__stream--one {
+  inset: 18%;
+  border: 0;
+  background: conic-gradient(
+    from 260deg,
+    transparent 0deg,
+    rgba(91, 33, 182, 0.1) 28deg,
+    rgba(139, 92, 246, 0.15) 58deg,
+    transparent 96deg,
+    rgba(76, 29, 149, 0.1) 198deg,
+    transparent 246deg,
+    transparent 360deg
+  );
+  filter: blur(24px);
+  animation: light-vortex-spin 20s linear infinite;
+}
+
+.light-vortex__stream--two {
+  inset: 20%;
+  background:
+    conic-gradient(
+      from 44deg,
+      transparent 0deg,
+      rgba(124, 58, 237, 0.12) 42deg,
+      rgba(46, 16, 101, 0.12) 86deg,
+      transparent 132deg,
+      transparent 360deg
+    );
+  filter: blur(28px);
+  animation: light-vortex-spin-reverse 26s linear infinite;
+}
+
+.light-vortex__core {
+  inset: 40%;
+  background:
+    radial-gradient(circle, rgba(0, 0, 0, 0.54) 0 30%, rgba(46, 16, 101, 0.22) 54%, rgba(91, 33, 182, 0.1) 72%, transparent 84%);
+  box-shadow:
+    0 0 28px rgba(46, 16, 101, 0.2),
+    0 0 64px rgba(124, 58, 237, 0.12);
+  animation: light-vortex-core 9s ease-in-out infinite;
+}
+
+
+
+
+@keyframes light-vortex-spin {
+  from {
+    transform: rotate(0deg) scale(0.96);
+  }
+  to {
+    transform: rotate(360deg) scale(0.96);
+  }
+}
+
+@keyframes light-vortex-spin-reverse {
+  from {
+    transform: rotate(360deg) scale(1);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes light-vortex-breathe {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.68;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes light-vortex-pulse {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: rotate(-8deg) scale(0.92);
+  }
+  50% {
+    opacity: 0.86;
+    transform: rotate(18deg) scale(1.04);
+  }
+}
+
+@keyframes light-vortex-core {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.08);
+  }
+}
+
+.reveal-section {
+  animation: reveal-up 0.45s ease both;
+}
+
+.soft-card {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal-section {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-section {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .soft-card {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  }
+
+  .soft-card,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+
+
+  .hero-purple-flow {
+    height: 260px;
+    opacity: 0.3;
+    filter: blur(12px);
+    animation-duration: 14s;
+  }
+
+  .light-vortex {
+    width: 300px;
+    opacity: 0.36;
+  }
+
+  .light-vortex__ring--outer,
+  .light-vortex__ring--inner,
+  .light-vortex__stream--one,
+  .light-vortex__stream--two {
+    filter: blur(22px);
+    animation-duration: 32s;
+  }
+
+  .light-vortex__halo {
+    filter: blur(28px);
+    animation-duration: 14s;
+  }
+}
+
+
+
+
+
+
+
+@keyframes vortex-spin {
+  from {
+    transform: rotateX(75deg) rotate(0deg);
+  }
+  to {
+    transform: rotateX(75deg) rotate(360deg);
+  }
+}
+
+@keyframes vortex-spin-reverse {
+  from {
+    transform: rotateX(75deg) rotate(360deg);
+  }
+  to {
+    transform: rotateX(75deg) rotate(0deg);
+  }
+}
+
+@keyframes vortex-core-pulse {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}
