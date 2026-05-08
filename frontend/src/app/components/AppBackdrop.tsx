@@ -1,54 +1,7 @@
-import type { CSSProperties } from "react";
-import type { StarPoint } from "./types";
-
-function StarLayer({
-  layer,
-  stars,
-}: {
-  layer: "far" | "mid" | "near";
-  stars: StarPoint[];
-}) {
-  return (
-    <>
-      {stars.map((star, index) => (
-        <span
-          key={`${layer}-${star.left}-${star.top}-${index}`}
-          className={`home-star home-star--${layer}`}
-          style={
-            {
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              animationDelay: `${star.delay}s`,
-              animationDuration: `${star.duration}s`,
-              "--dx": `${star.dx}vw`,
-              "--dy": `${star.dy}vh`,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </>
-  );
-}
-
-export function AppBackdrop({
-  farStars,
-  midStars,
-  nearStars,
-}: {
-  farStars: StarPoint[];
-  midStars: StarPoint[];
-  nearStars: StarPoint[];
-}) {
+export function AppBackdrop() {
   return (
     <>
       <div className="pointer-events-none fixed inset-0 z-0 bg-black" />
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <StarLayer layer="far" stars={farStars} />
-        <StarLayer layer="mid" stars={midStars} />
-        <StarLayer layer="near" stars={nearStars} />
-      </div>
     </>
   );
 }

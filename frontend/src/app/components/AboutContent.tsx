@@ -15,11 +15,7 @@ export function AboutContent() {
     <div className="flex flex-col gap-6 pb-20">
       <section className="relative z-10 py-12">
         <div className="max-w-4xl">
-          <span className="inline-flex items-center gap-2 rounded-full bg-violet-300/[0.07] px-4 py-2 text-sm text-violet-100 ring-1 ring-violet-300/10">
-            <Info aria-hidden className="h-4 w-4" />
-            Đề tài nhóm
-          </span>
-          <h1 className="mt-6 text-4xl font-black text-white sm:text-5xl">
+          <h1 className="text-4xl font-black text-white sm:text-5xl">
             VaultToken ERC-20 DeFi Ecosystem
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-300">
@@ -31,9 +27,8 @@ export function AboutContent() {
       </section>
 
       <Panel title="Thành Viên Nhóm" eyebrow="Team" icon={Users}>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["NAM", "Leader / AccessManager / LaunchToken"],
             ["TIN", "Treasury / TokenLocker"],
             ["HẬU", "StakingVault / kiến trúc hệ thống"],
             ["VINH", "AirdropPoints / snapshot flow"],

@@ -94,34 +94,7 @@ button:disabled {
   animation: app-loader-spin 1.4s linear infinite, app-loader-breathe 1.8s ease-in-out infinite;
 }
 
-.home-star {
-  position: absolute;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  transform: translate3d(0, 0, 0) scale(1);
-  will-change: transform, opacity;
-}
 
-.home-star--far {
-  opacity: 0.42;
-  filter: blur(0.2px);
-  animation-name: star-pull-far;
-}
-
-.home-star--mid {
-  opacity: 0.72;
-  filter: blur(0.1px);
-  animation-name: star-pull-mid;
-}
-
-.home-star--near {
-  opacity: 0.95;
-  box-shadow: 0 0 14px rgba(255, 255, 255, 0.88);
-  animation-name: star-pull-near;
-}
 
 @keyframes app-loader-fade {
   0% {
@@ -295,24 +268,8 @@ button:disabled {
   animation: light-vortex-core 9s ease-in-out infinite;
 }
 
-@keyframes star-pull-near {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) scale(0.4);
-  }
-  25% {
-    opacity: 0.55;
-  }
-  82% {
-    opacity: 1;
-    transform: translate3d(calc(var(--dx) * 0.82), calc(var(--dy) * 0.82), 0)
-      scale(1.03);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--dx), var(--dy), 0) scale(0.08);
-  }
-}
+
+
 
 @keyframes light-vortex-spin {
   from {
@@ -422,23 +379,6 @@ button:disabled {
     backdrop-filter: blur(4px) !important;
   }
 
-  .home-star {
-    animation-duration: 28s !important;
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.46);
-    will-change: auto;
-  }
-
-  .home-star--far {
-    opacity: 0.28;
-  }
-
-  .home-star--mid {
-    opacity: 0.42;
-  }
-
-  .home-star--near {
-    opacity: 0.52;
-  }
 
   .hero-purple-flow {
     height: 260px;
@@ -466,43 +406,11 @@ button:disabled {
   }
 }
 
-@keyframes star-pull-mid {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) scale(0.5);
-  }
-  35% {
-    opacity: 0.78;
-  }
-  85% {
-    opacity: 0.9;
-    transform: translate3d(calc(var(--dx) * 0.74), calc(var(--dy) * 0.74), 0)
-      scale(0.9);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--dx), var(--dy), 0) scale(0.12);
-  }
-}
 
-@keyframes star-pull-far {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) scale(0.6);
-  }
-  45% {
-    opacity: 0.55;
-  }
-  88% {
-    opacity: 0.62;
-    transform: translate3d(calc(var(--dx) * 0.66), calc(var(--dy) * 0.66), 0)
-      scale(0.7);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--dx), var(--dy), 0) scale(0.18);
-  }
-}
+
+
+
+
 
 @keyframes vortex-spin {
   from {
