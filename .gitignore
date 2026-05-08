@@ -28,4 +28,4 @@ Thumbs.db
 
 
 yarn.lock
-.env
+.env/
