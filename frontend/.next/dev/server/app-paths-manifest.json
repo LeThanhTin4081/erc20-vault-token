@@ -1,4 +1,9 @@
 {
+  "/about/page": "app/about/page.js",
+  "/console/admin/page": "app/console/admin/page.js",
+  "/console/airdrop/page": "app/console/airdrop/page.js",
+  "/console/locker/page": "app/console/locker/page.js",
   "/console/page": "app/console/page.js",
+  "/console/staking/page": "app/console/staking/page.js",
   "/page": "app/page.js"
 }
